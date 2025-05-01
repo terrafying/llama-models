@@ -7,7 +7,7 @@ A powerful RAG (Retrieval-Augmented Generation) system for processing and queryi
 - Distributed video processing using Ray
 - Parallel embedding generation
 - Efficient vector storage with FAISS
-- Multiple LLM provider support
+- Local model support with HuggingFace integration
 - GPU acceleration when available
 - Web interface for easy interaction
 - Command-line interface for automation
@@ -15,6 +15,7 @@ A powerful RAG (Retrieval-Augmented Generation) system for processing and queryi
 - Automatic storage management and cleanup
 - Topic and creator deep-dive analysis
 - Content synthesis and reporting
+- Intelligent error handling with local model analysis
 
 ## Installation
 
@@ -45,7 +46,22 @@ source .venv/bin/activate  # On Unix/macOS
 uv pip install -r requirements.txt
 ```
 
-4. (Optional) Install IPFS for distributed storage:
+4. Set up environment variables:
+Create a `.env` file in the project root with the following variables:
+```bash
+# HuggingFace settings
+HUGGINGFACE_CACHE_DIR=~/.cache/huggingface
+
+# Environment settings
+PYTHONPATH=.
+PYTHONUNBUFFERED=1
+
+# Test settings
+TEST_ENV=development
+TEST_VERBOSITY=2
+```
+
+5. (Optional) Install IPFS for distributed storage:
 ```bash
 # macOS
 brew install ipfs
@@ -425,3 +441,28 @@ You can view these notebooks:
 - Directly in the repository
 - On [GitHub Pages](https://your-username.github.io/ragtime)
 - Using [Jupyter nbviewer](https://nbviewer.jupyter.org/github/your-username/ragtime/tree/main/notebooks/)
+
+## Running Tests
+
+The system includes an intelligent test runner that automatically handles dependencies and provides detailed error analysis:
+
+```bash
+# Basic test run
+python scripts/auto_test.py
+
+# Run with coverage
+python scripts/auto_test.py --coverage
+
+# Run with verbose output
+python scripts/auto_test.py -v
+
+# Skip environment variable checks
+python scripts/auto_test.py --no-env-check
+```
+
+The test runner will:
+1. Check for required environment variables
+2. Automatically resolve missing dependencies
+3. Run tests with specified options
+4. Provide intelligent error analysis
+5. Display detailed error information and suggested solutions

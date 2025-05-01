@@ -10,6 +10,8 @@ import json
 from rich.console import Console
 from rich.panel import Panel
 
+from ragtime_llm.utils.auto_fix_manager import AutoFixManager, FixAction, FixConfidence
+
 console = Console()
 
 @dataclass
@@ -26,13 +28,15 @@ class ErrorContext:
 class ErrorAnalyzer:
     """Analyzes test errors using LLM to provide intelligent solutions."""
     
-    def __init__(self, llm_client=None):
+    def __init__(self, llm_client=None, auto_fix_manager: Optional[AutoFixManager] = None):
         """Initialize the error analyzer.
         
         Args:
             llm_client: Optional LLM client for error analysis
+            auto_fix_manager: Optional auto-fix manager for applying fixes
         """
         self.llm_client = llm_client
+        self.auto_fix_manager = auto_fix_manager
         self.error_patterns = {
             'import_error': r"ImportError.*?No module named '([^']+)'",
             'module_not_found': r"ModuleNotFoundError.*?No module named '([^']+)'",
@@ -40,8 +44,10 @@ class ErrorAnalyzer:
             'type_error': r"TypeError.*?([^']+)",
             'value_error': r"ValueError.*?([^']+)",
             'assertion_error': r"AssertionError.*?([^']+)",
-            'api_key_error': r"api_key.*?must be set",
+            'model_not_found': r"Model.*?not found",
             'huggingface_error': r"cannot import name '([^']+)' from 'huggingface_hub'",
+            'gpu_error': r"CUDA.*?not available",
+            'memory_error': r"CUDA.*?out of memory",
         }
 
     def extract_error_context(self, error_output: str) -> List[ErrorContext]:
@@ -88,12 +94,32 @@ class ErrorAnalyzer:
                     contexts.append(current_error)
                     current_traceback = []
             
-            # Match API key errors
-            elif "api_key" in line.lower() and "must be set" in line.lower():
+            # Match model not found errors
+            elif "model" in line.lower() and "not found" in line.lower():
                 current_error = ErrorContext(
-                    error_type="api_key_error",
+                    error_type="model_not_found",
                     error_message=line,
-                    module_name="openai" if "openai" in line.lower() else "anthropic"
+                    module_name="local_model"
+                )
+                contexts.append(current_error)
+                current_traceback = []
+            
+            # Match GPU errors
+            elif "cuda" in line.lower() and "not available" in line.lower():
+                current_error = ErrorContext(
+                    error_type="gpu_error",
+                    error_message=line,
+                    module_name="torch"
+                )
+                contexts.append(current_error)
+                current_traceback = []
+            
+            # Match memory errors
+            elif "cuda" in line.lower() and "out of memory" in line.lower():
+                current_error = ErrorContext(
+                    error_type="memory_error",
+                    error_message=line,
+                    module_name="torch"
                 )
                 contexts.append(current_error)
                 current_traceback = []
@@ -178,19 +204,49 @@ class ErrorAnalyzer:
                     "Run tests in a clean virtual environment"
                 ]
             }
-        elif error_context.error_type == "api_key_error":
+        elif error_context.error_type == "model_not_found":
             return {
-                "analysis": "Missing API key",
+                "analysis": "Local model not found",
                 "priority": "high",
                 "suggested_fixes": [
-                    f"Set {error_context.module_name.upper()}_API_KEY environment variable",
-                    f"Add API key to .env file",
-                    "Check API key configuration in settings"
+                    "Check model path in configuration",
+                    "Ensure model files are downloaded",
+                    "Verify model format and compatibility"
                 ],
                 "prevention_strategies": [
-                    "Use environment variables for API keys",
-                    "Implement API key validation on startup",
-                    "Add API key checks to CI/CD pipeline"
+                    "Use model versioning",
+                    "Implement model validation on startup",
+                    "Add model checks to CI/CD pipeline"
+                ]
+            }
+        elif error_context.error_type == "gpu_error":
+            return {
+                "analysis": "GPU not available",
+                "priority": "medium",
+                "suggested_fixes": [
+                    "Check CUDA installation",
+                    "Verify GPU drivers",
+                    "Consider using CPU fallback"
+                ],
+                "prevention_strategies": [
+                    "Add GPU availability checks",
+                    "Implement graceful CPU fallback",
+                    "Document GPU requirements"
+                ]
+            }
+        elif error_context.error_type == "memory_error":
+            return {
+                "analysis": "GPU memory exhausted",
+                "priority": "high",
+                "suggested_fixes": [
+                    "Reduce batch size",
+                    "Use model quantization",
+                    "Enable gradient checkpointing"
+                ],
+                "prevention_strategies": [
+                    "Monitor memory usage",
+                    "Implement memory-efficient training",
+                    "Add memory checks before operations"
                 ]
             }
         elif error_context.error_type == "huggingface_error":
@@ -227,4 +283,73 @@ class ErrorAnalyzer:
             f"[bold yellow]Prevention Strategies:[/bold yellow]\n"
             + "\n".join(f"- {strategy}" for strategy in analysis['prevention_strategies']),
             title="Error Analysis Report"
-        )) 
+        ))
+        
+        # If auto-fix manager is available, attempt to fix
+        if self.auto_fix_manager:
+            self._attempt_auto_fix(error_context, analysis)
+
+    def _attempt_auto_fix(self, error_context: ErrorContext, analysis: Dict[str, Any]) -> None:
+        """Attempt to automatically fix the error.
+        
+        Args:
+            error_context: The error context
+            analysis: The error analysis
+        """
+        # Create fix action based on error type
+        fix_action = self._create_fix_action(error_context, analysis)
+        if not fix_action:
+            return
+            
+        # Apply fix
+        success, message = self.auto_fix_manager.apply_fix(fix_action)
+        
+        # Display result
+        if success:
+            console.print(f"[green]Auto-fix applied: {message}[/green]")
+        else:
+            console.print(f"[yellow]Auto-fix not applied: {message}[/yellow]")
+
+    def _create_fix_action(self, error_context: ErrorContext, analysis: Dict[str, Any]) -> Optional[FixAction]:
+        """Create a fix action based on error context and analysis.
+        
+        Args:
+            error_context: The error context
+            analysis: The error analysis
+            
+        Returns:
+            FixAction if a fix can be created, None otherwise
+        """
+        if error_context.error_type in ["import_error", "module_not_found"]:
+            return FixAction(
+                action_type="install_dependency",
+                description=f"Install missing package: {error_context.module_name}",
+                command=["pip", "install", error_context.module_name],
+                confidence=FixConfidence.MEDIUM
+            )
+        elif error_context.error_type == "model_not_found":
+            return FixAction(
+                action_type="download_model",
+                description=f"Download missing model: {error_context.module_name}",
+                command=["python", "-m", "ragtime_llm.utils.model_manager", "download", error_context.module_name],
+                confidence=FixConfidence.LOW
+            )
+        elif error_context.error_type == "gpu_error":
+            return FixAction(
+                action_type="gpu_fallback",
+                description="Enable CPU fallback for GPU error",
+                file_changes={
+                    "ragtime_llm/config/model_config.py": "USE_GPU = False\n"
+                },
+                confidence=FixConfidence.MEDIUM
+            )
+        elif error_context.error_type == "memory_error":
+            return FixAction(
+                action_type="memory_optimization",
+                description="Enable memory optimizations",
+                file_changes={
+                    "ragtime_llm/config/model_config.py": "ENABLE_GRADIENT_CHECKPOINTING = True\nBATCH_SIZE = 1\n"
+                },
+                confidence=FixConfidence.MEDIUM
+            )
+        return None 
