@@ -59,6 +59,9 @@ dev = [
     "mypy>=1.0.0"
 ]
 
+[project.scripts]
+ragtime = "ragtime_llm.cli:main"
+
 [tool.setuptools]
 packages = ["ragtime_llm"]
 

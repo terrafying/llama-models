@@ -10,6 +10,9 @@ A powerful RAG (Retrieval-Augmented Generation) system for processing and queryi
 - Multiple LLM provider support
 - GPU acceleration when available
 - Web interface for easy interaction
+- Command-line interface for automation
+- Space-efficient storage with IPFS and local volumes
+- Automatic storage management and cleanup
 
 ## Installation
 
@@ -24,29 +27,129 @@ cd llama-models
 pip install -r requirements.txt
 ```
 
+3. (Optional) Install IPFS for distributed storage:
+```bash
+# macOS
+brew install ipfs
+
+# Linux
+sudo apt-get install ipfs
+
+# Start IPFS daemon
+ipfs daemon
+```
+
+## Storage Configuration
+
+The system supports multiple storage backends:
+
+1. **IPFS Storage** (for large files >50MB):
+   - Automatically used for video files
+   - Requires IPFS daemon running
+   - Default API endpoint: `/ip4/127.0.0.1/tcp/5001`
+
+2. **Local Volumes** (for medium-sized files):
+   - Automatically detects mounted volumes in `/Volumes` and `/mnt`
+   - Can be configured manually
+   - Example configuration:
+   ```python
+   from ragtime_llm.utils.storage_manager import StorageManager
+   
+   storage_manager = StorageManager(
+       cache_dir=".cache",
+       ipfs_api="/ip4/127.0.0.1/tcp/5001",
+       local_volumes=["/Volumes/my_drive"]
+   )
+   ```
+
+3. **Cache Storage** (for small files):
+   - Default location: `.cache`
+   - Configurable size limit (default: 10GB)
+   - Automatic cleanup of oldest files
+
 ## Usage
 
-1. Initialize the RAG system:
+### Command Line Interface
+
+The system provides a command-line interface for common operations:
+
+1. Process a YouTube video:
+```bash
+# Basic usage
+ragtime process-video "https://www.youtube.com/watch?v=..."
+
+# With custom output directory
+ragtime process-video "https://www.youtube.com/watch?v=..." --output-dir /Volumes/my_drive/output
+```
+
+2. Process a YouTube playlist:
+```bash
+# Basic usage
+ragtime process-playlist "https://www.youtube.com/playlist?list=..."
+
+# With custom output directory
+ragtime process-playlist "https://www.youtube.com/playlist?list=..." --output-dir /Volumes/my_drive/output
+```
+
+3. Query the system:
+```bash
+# Basic query
+ragtime query "What is the main topic of the video?"
+
+# With custom parameters
+ragtime query "What is the main topic of the video?" --max-tokens 500 --temperature 0.7
+```
+
+4. Generate a video response:
+```bash
+# Basic usage
+ragtime generate-video "Summarize the key points"
+
+# With custom output
+ragtime generate-video "Summarize the key points" --output-path /Volumes/my_drive/responses/summary.mp4
+```
+
+5. Start the web interface:
+```bash
+# Default port (8080)
+ragtime serve
+
+# Custom port
+ragtime serve --port 9000
+```
+
+### Python API
+
+1. Initialize the RAG system with storage:
 ```python
 from ragtime_llm.core.unified_rag_system import YouTubeRAG
+from ragtime_llm.utils.storage_manager import StorageManager
 
-# Initialize with default settings
-rag_system = YouTubeRAG()
+# Initialize storage manager
+storage_manager = StorageManager(
+    cache_dir=".cache",
+    ipfs_api="/ip4/127.0.0.1/tcp/5001",
+    local_volumes=["/Volumes/my_drive"]
+)
 
-# Or customize settings
+# Initialize RAG system with storage
 rag_system = YouTubeRAG(
     embedding_model="all-MiniLM-L6-v2",
-    num_workers=4  # Number of Ray workers
+    num_workers=4,
+    storage_manager=storage_manager
 )
 ```
 
-2. Add videos:
+2. Add videos with storage management:
 ```python
 # Add a single video
-rag_system.add_video("https://www.youtube.com/watch?v=...")
+result = rag_system.add_video("https://www.youtube.com/watch?v=...")
+print(f"Video stored at: {result['storage']['video']['location']}")
 
 # Add a playlist
-rag_system.add_playlist("https://www.youtube.com/playlist?list=...")
+results = rag_system.add_playlist("https://www.youtube.com/playlist?list=...")
+for video_result in results:
+    print(f"Video {video_result['video_info']['title']} stored at: {video_result['storage']['video']['location']}")
 ```
 
 3. Query videos:
@@ -56,14 +159,25 @@ response = rag_system.generate_response(
     max_tokens=500,
     temperature=0.7
 )
+print(response)
 ```
 
 4. Generate video responses:
 ```python
 video_path = rag_system.generate_video_response(
     query="Summarize the key points",
-    output_path="response.mp4"
+    output_path="/Volumes/my_drive/responses/summary.mp4"
 )
+print(f"Response video generated at: {video_path}")
+```
+
+5. Clean up resources:
+```python
+# Clean up storage
+rag_system.cleanup()
+
+# Or with custom cache size
+rag_system.storage_manager.cleanup(max_cache_size=5 * 1024 * 1024 * 1024)  # 5GB
 ```
 
 ## Web Interface
@@ -81,13 +195,68 @@ The system uses Ray for distributed processing:
 - Video transcription is parallelized across workers
 - Embedding generation is distributed
 - Vector store operations are optimized for parallel processing
+- Storage operations are distributed across available volumes
 
 ## Hardware Requirements
 
 - CPU: Multi-core processor recommended
 - RAM: 8GB minimum, 16GB+ recommended
 - GPU: Optional but recommended for faster processing
-- Storage: SSD recommended for better performance
+- Storage: 
+  - SSD recommended for better performance
+  - Multiple volumes for distributed storage
+  - IPFS node for distributed storage (optional)
+
+## Contributing
+
+We welcome contributions to improve the RAG-LLM system! Here's how you can help:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests (`pytest tests/`)
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+### Development Setup
+
+1. Install development dependencies:
+```bash
+pip install -r requirements.txt
+pip install -e ".[dev]"
+```
+
+2. Set up pre-commit hooks:
+```bash
+pre-commit install
+```
+
+3. Run tests:
+```bash
+pytest tests/
+```
+
+### Code Style
+
+We use:
+- Black for code formatting
+- isort for import sorting
+- flake8 for linting
+- mypy for type checking
+
+Run the formatters:
+```bash
+black .
+isort .
+```
+
+### Documentation
+
+- Keep docstrings up to date
+- Update README.md for new features
+- Add type hints to all functions
+- Include examples in docstrings
 
 ## License
 
