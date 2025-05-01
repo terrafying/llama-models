@@ -1,9 +1,9 @@
 # Core dependencies
-numpy>=1.24.0
-torch>=2.0.0
-transformers>=4.30.0
+numpy>=1.26.0
+torch>=2.2.0
+transformers>=4.38.0
 sentence-transformers>=2.2.0
-faiss-cpu>=1.7.0
+faiss-cpu>=1.7.4
 faiss-gpu>=1.7.0; platform_system != "Darwin"
 pytube>=12.0.0
 youtube-transcript-api>=0.6.0
@@ -37,3 +37,18 @@ mypy>=1.0.0
 
 # Added ipfshttpclient
 ipfshttpclient<=0.8.0a2
+
+# Added accelerate
+accelerate>=0.27.0
+
+# Added sentencepiece
+sentencepiece>=0.2.0
+
+# Added ipykernel
+ipykernel>=6.29.0
+
+# Added matplotlib
+matplotlib>=3.8.0
+
+# Added librosa
+librosa>=0.10.0

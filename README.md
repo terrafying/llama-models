@@ -13,6 +13,8 @@ A powerful RAG (Retrieval-Augmented Generation) system for processing and queryi
 - Command-line interface for automation
 - Space-efficient storage with IPFS and local volumes
 - Automatic storage management and cleanup
+- Topic and creator deep-dive analysis
+- Content synthesis and reporting
 
 ## Installation
 
@@ -118,6 +120,34 @@ ragtime serve
 ragtime serve --port 9000
 ```
 
+6. Topic Deep-Dive Analysis:
+```bash
+# Basic topic analysis
+ragtime topic-deep-dive "artificial intelligence"
+
+# With custom parameters
+ragtime topic-deep-dive "quantum computing" \
+  --max-videos 15 \
+  --max-tokens 3000 \
+  --temperature 0.8 \
+  --output-format html \
+  --output-file analysis.html
+```
+
+7. Creator Deep-Dive Analysis:
+```bash
+# Basic creator analysis
+ragtime creator-deep-dive "https://www.youtube.com/c/3blue1brown"
+
+# With custom parameters
+ragtime creator-deep-dive "https://www.youtube.com/c/veritasium" \
+  --max-videos 30 \
+  --max-tokens 3000 \
+  --temperature 0.8 \
+  --output-format markdown \
+  --output-file creator_analysis.md
+```
+
 ### Python API
 
 1. Initialize the RAG system with storage:
@@ -179,6 +209,77 @@ rag_system.cleanup()
 # Or with custom cache size
 rag_system.storage_manager.cleanup(max_cache_size=5 * 1024 * 1024 * 1024)  # 5GB
 ```
+
+6. Topic and Creator Analysis:
+```python
+from ragtime_llm.core.unified_rag_system import YouTubeRAG
+from ragtime_llm.content_synthesis import ContentSynthesizer
+
+# Initialize RAG system
+rag_system = YouTubeRAG()
+
+# Create content synthesizer
+synthesizer = ContentSynthesizer(rag_system)
+
+# Topic deep-dive
+topic_analysis = synthesizer.topic_deep_dive(
+    topic="machine learning",
+    max_videos=15,
+    max_tokens=3000,
+    temperature=0.8
+)
+
+# Generate report
+report = synthesizer.generate_report(
+    analysis=topic_analysis,
+    output_format="markdown"
+)
+
+# Save report
+with open("topic_analysis.md", "w") as f:
+    f.write(report)
+
+# Creator deep-dive
+creator_analysis = synthesizer.creator_deep_dive(
+    creator_url="https://www.youtube.com/c/3blue1brown",
+    max_videos=30,
+    max_tokens=3000,
+    temperature=0.8
+)
+
+# Generate HTML report
+html_report = synthesizer.generate_report(
+    analysis=creator_analysis,
+    output_format="html"
+)
+
+# Save report
+with open("creator_analysis.html", "w") as f:
+    f.write(html_report)
+```
+
+### Analysis Features
+
+1. Topic Deep-Dive:
+   - Comprehensive analysis of a topic across multiple videos
+   - Key points extraction and synthesis
+   - Chronological timeline of topic development
+   - Source tracking and citation
+   - Customizable analysis depth and scope
+
+2. Creator Deep-Dive:
+   - Analysis of a creator's body of work
+   - Content theme identification
+   - Presentation style analysis
+   - Content evolution tracking
+   - Source management and citation
+
+3. Report Generation:
+   - Multiple output formats (Markdown, HTML)
+   - Structured and formatted reports
+   - Source citations and references
+   - Customizable report sections
+   - Timestamp and metadata inclusion
 
 ## Web Interface
 

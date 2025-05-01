@@ -1,5 +1,5 @@
 """
-Command-line interface for the RAG-LLM system.
+Command-line interface for RAG-LLM system.
 
 This module provides a command-line interface for:
 1. Processing YouTube videos and playlists
@@ -7,6 +7,7 @@ This module provides a command-line interface for:
 3. Generating video responses
 4. Managing the system
 5. Configuring storage options
+6. Topic and creator deep-dive analysis
 
 Usage:
     ragtime process-video <video_url> [--output-dir OUTPUT_DIR] [--use-ipfs] [--cache-dir CACHE_DIR]
@@ -15,15 +16,19 @@ Usage:
     ragtime generate-video <query> [--output-path OUTPUT_PATH] [--max-tokens MAX_TOKENS] [--temperature TEMP]
     ragtime serve [--port PORT] [--cache-dir CACHE_DIR]
     ragtime cleanup [--cache-dir CACHE_DIR] [--max-cache-size MAX_CACHE_SIZE]
+    ragtime topic-deep-dive <topic> [--max-videos MAX_VIDEOS] [--output-format FORMAT] [--output-file FILE]
+    ragtime creator-deep-dive <creator_url> [--max-videos MAX_VIDEOS] [--output-format FORMAT] [--output-file FILE]
 """
 
-import argparse
 import os
+import sys
+import argparse
 from pathlib import Path
 from typing import Optional
 from ragtime_llm.core.unified_rag_system import YouTubeRAG, create_web_ui
 from ragtime_llm.utils.logger import logger
 from ragtime_llm.utils.storage_manager import StorageManager
+from ragtime_llm.content_synthesis import ContentSynthesizer
 
 def get_storage_manager(args) -> StorageManager:
     """Create storage manager from CLI arguments."""
@@ -110,6 +115,68 @@ def cleanup(args):
         logger.error(f"Error during cleanup: {e}")
         raise
 
+def topic_deep_dive(args):
+    """Perform a deep-dive analysis of a topic."""
+    try:
+        storage_manager = get_storage_manager(args)
+        rag_system = YouTubeRAG(storage_manager=storage_manager)
+        synthesizer = ContentSynthesizer(rag_system)
+        
+        analysis = synthesizer.topic_deep_dive(
+            topic=args.topic,
+            max_videos=args.max_videos,
+            max_tokens=args.max_tokens,
+            temperature=args.temperature
+        )
+        
+        report = synthesizer.generate_report(
+            analysis=analysis,
+            output_format=args.output_format
+        )
+        
+        if args.output_file:
+            with open(args.output_file, 'w') as f:
+                f.write(report)
+            logger.info(f"Report saved to: {args.output_file}")
+        else:
+            print("\nReport:")
+            print(report)
+            
+    except Exception as e:
+        logger.error(f"Error in topic deep-dive: {e}")
+        raise
+
+def creator_deep_dive(args):
+    """Perform a deep-dive analysis of a creator."""
+    try:
+        storage_manager = get_storage_manager(args)
+        rag_system = YouTubeRAG(storage_manager=storage_manager)
+        synthesizer = ContentSynthesizer(rag_system)
+        
+        analysis = synthesizer.creator_deep_dive(
+            creator_url=args.creator_url,
+            max_videos=args.max_videos,
+            max_tokens=args.max_tokens,
+            temperature=args.temperature
+        )
+        
+        report = synthesizer.generate_report(
+            analysis=analysis,
+            output_format=args.output_format
+        )
+        
+        if args.output_file:
+            with open(args.output_file, 'w') as f:
+                f.write(report)
+            logger.info(f"Report saved to: {args.output_file}")
+        else:
+            print("\nReport:")
+            print(report)
+            
+    except Exception as e:
+        logger.error(f"Error in creator deep-dive: {e}")
+        raise
+
 def main():
     parser = argparse.ArgumentParser(description="RAG-LLM System CLI")
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
@@ -119,6 +186,8 @@ def main():
     common_parser.add_argument("--cache-dir", default=".cache", help="Cache directory")
     common_parser.add_argument("--ipfs-api", default="/ip4/127.0.0.1/tcp/5001", help="IPFS API endpoint")
     common_parser.add_argument("--local-volumes", nargs="+", help="Local volume paths")
+    common_parser.add_argument("--max-tokens", type=int, default=2000, help="Maximum tokens in response")
+    common_parser.add_argument("--temperature", type=float, default=0.7, help="Temperature for generation")
 
     # Process video command
     process_video_parser = subparsers.add_parser("process-video", parents=[common_parser], help="Process a YouTube video")
@@ -156,6 +225,22 @@ def main():
     cleanup_parser = subparsers.add_parser("cleanup", parents=[common_parser], help="Clean up storage")
     cleanup_parser.add_argument("--max-cache-size", type=int, default=10 * 1024 * 1024 * 1024, help="Maximum cache size in bytes")
     cleanup_parser.set_defaults(func=cleanup)
+
+    # Topic deep-dive command
+    topic_parser = subparsers.add_parser("topic-deep-dive", parents=[common_parser], help="Perform topic deep-dive analysis")
+    topic_parser.add_argument("topic", help="Topic to analyze")
+    topic_parser.add_argument("--max-videos", type=int, default=10, help="Maximum number of videos to analyze")
+    topic_parser.add_argument("--output-format", choices=["markdown", "html"], default="markdown", help="Output format")
+    topic_parser.add_argument("--output-file", help="Output file path")
+    topic_parser.set_defaults(func=topic_deep_dive)
+
+    # Creator deep-dive command
+    creator_parser = subparsers.add_parser("creator-deep-dive", parents=[common_parser], help="Perform creator deep-dive analysis")
+    creator_parser.add_argument("creator_url", help="URL of the creator's channel")
+    creator_parser.add_argument("--max-videos", type=int, default=20, help="Maximum number of videos to analyze")
+    creator_parser.add_argument("--output-format", choices=["markdown", "html"], default="markdown", help="Output format")
+    creator_parser.add_argument("--output-file", help="Output file path")
+    creator_parser.set_defaults(func=creator_deep_dive)
 
     args = parser.parse_args()
     if args.command:
