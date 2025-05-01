@@ -11,47 +11,103 @@ import glob
 import os
 from huggingface_hub import HfApi, ModelFilter
 import torch
+import asyncio
+from datetime import datetime
+import logging
+from ragtime_llm import PyResourceDiscovery, PyModelInfo
+
+logger = logging.getLogger(__name__)
 
 class ModelInfo:
     """Class to store model information."""
-    def __init__(
-        self,
-        name: str,
-        path: Optional[Path] = None,
-        source: str = "local",
-        size: Optional[int] = None,
-        quantization: Optional[str] = None,
-        format: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        self.name = name
-        self.path = path
-        self.source = source  # "local" or "huggingface"
-        self.size = size
-        self.quantization = quantization
-        self.format = format
-        self.metadata = metadata or {}
+    def __init__(self, py_model_info: PyModelInfo):
+        self.name = py_model_info.name
+        self.path = Path(py_model_info.path)
+        self.model_type = py_model_info.model_type
+        self.size_bytes = py_model_info.size_bytes
+        self.last_modified = datetime.fromisoformat(py_model_info.last_modified.replace('Z', '+00:00'))
+        self.metadata = py_model_info.metadata
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "name": self.name,
-            "path": str(self.path) if self.path else None,
-            "source": self.source,
-            "size": self.size,
-            "quantization": self.quantization,
-            "format": self.format,
-            "metadata": self.metadata
-        }
+    def __str__(self) -> str:
+        return f"ModelInfo(name='{self.name}', type='{self.model_type}', size={self.size_bytes})"
+
+    def __repr__(self) -> str:
+        return self.__str__()
 
 class ResourceDiscovery:
     """Central class for discovering resources across the project."""
     
-    def __init__(self, base_dir: Optional[str] = None):
-        self.base_dir = Path(base_dir) if base_dir else Path.cwd()
-        self.resources = {}
-        self.hf_api = HfApi()
-        self.discover_all()
-    
+    def __init__(
+        self,
+        search_paths: List[str],
+        model_patterns: Optional[List[str]] = None,
+        cache_ttl_seconds: int = 3600,
+        max_parallel_searches: int = 4
+    ):
+        """
+        Initialize the resource discovery system.
+
+        Args:
+            search_paths: List of paths to search for models
+            model_patterns: List of glob patterns to match model files
+            cache_ttl_seconds: Time-to-live for the model cache in seconds
+            max_parallel_searches: Maximum number of parallel directory searches
+        """
+        if model_patterns is None:
+            model_patterns = ["*.gguf", "*.bin", "*.pt"]
+
+        self._discovery = PyResourceDiscovery(
+            search_paths=search_paths,
+            model_patterns=model_patterns,
+            cache_ttl_seconds=cache_ttl_seconds,
+            max_parallel_searches=max_parallel_searches
+        )
+
+    async def discover_models(self) -> List[ModelInfo]:
+        """
+        Discover models in the configured search paths.
+
+        Returns:
+            List of discovered ModelInfo objects
+        """
+        try:
+            py_models = await asyncio.to_thread(self._discovery.discover_models)
+            return [ModelInfo(m) for m in py_models]
+        except Exception as e:
+            logger.error(f"Error discovering models: {e}")
+            raise
+
+    async def get_model_info(self, name: str) -> Optional[ModelInfo]:
+        """
+        Get information about a specific model.
+
+        Args:
+            name: Name of the model to look up
+
+        Returns:
+            ModelInfo object if found, None otherwise
+        """
+        try:
+            py_model = await asyncio.to_thread(self._discovery.get_model_info, name)
+            return ModelInfo(py_model) if py_model else None
+        except Exception as e:
+            logger.error(f"Error getting model info for {name}: {e}")
+            raise
+
+    async def clear_cache(self) -> None:
+        """Clear the model discovery cache."""
+        try:
+            await asyncio.to_thread(self._discovery.clear_cache)
+        except Exception as e:
+            logger.error(f"Error clearing cache: {e}")
+            raise
+
+    def __str__(self) -> str:
+        return f"ResourceDiscovery(search_paths={self._discovery.search_paths})"
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
     def discover_all(self) -> Dict[str, Any]:
         """Discover all available resources."""
         self.resources = {
@@ -65,193 +121,6 @@ class ResourceDiscovery:
         }
         return self.resources
     
-    def discover_models(self) -> Dict[str, List[ModelInfo]]:
-        """Discover available models both locally and from Hugging Face."""
-        models = {
-            'llm': [],
-            'embedding': [],
-            'audio': [],
-            'video': []
-        }
-        
-        # Discover local models
-        local_models = self._discover_local_models()
-        for model_type, model_list in local_models.items():
-            models[model_type].extend(model_list)
-        
-        # Discover Hugging Face models
-        hf_models = self._discover_huggingface_models()
-        for model_type, model_list in hf_models.items():
-            models[model_type].extend(model_list)
-        
-        return models
-
-    def _discover_local_models(self) -> Dict[str, List[ModelInfo]]:
-        """Discover models available locally."""
-        models = {
-            'llm': [],
-            'embedding': [],
-            'audio': [],
-            'video': []
-        }
-        
-        # Check model directories
-        model_dirs = {
-            'llm': ['models/llm', 'llama_models'],
-            'embedding': ['models/embedding'],
-            'audio': ['models/audio'],
-            'video': ['models/video']
-        }
-        
-        for model_type, dirs in model_dirs.items():
-            for dir_path in dirs:
-                full_path = self.base_dir / dir_path
-                if full_path.exists():
-                    # Look for various model formats
-                    for ext in ['*.pt', '*.gguf', '*.bin', '*.safetensors']:
-                        for model_path in full_path.glob(ext):
-                            model_info = self._analyze_local_model(model_path)
-                            if model_info:
-                                models[model_type].append(model_info)
-        
-        return models
-
-    def _analyze_local_model(self, model_path: Path) -> Optional[ModelInfo]:
-        """Analyze a local model file to extract metadata."""
-        try:
-            size = model_path.stat().st_size
-            name = model_path.stem
-            
-            # Try to determine quantization and format
-            quantization = None
-            format = model_path.suffix[1:]  # Remove the dot
-            
-            if format == 'gguf':
-                # Parse quantization from filename
-                parts = name.split('.')
-                if len(parts) > 1:
-                    quantization = parts[-1]
-            
-            return ModelInfo(
-                name=name,
-                path=model_path,
-                source="local",
-                size=size,
-                quantization=quantization,
-                format=format
-            )
-        except Exception as e:
-            print(f"Error analyzing model {model_path}: {e}")
-            return None
-
-    def _discover_huggingface_models(self) -> Dict[str, List[ModelInfo]]:
-        """Discover available models from Hugging Face."""
-        models = {
-            'llm': [],
-            'embedding': [],
-            'audio': [],
-            'video': []
-        }
-        
-        try:
-            # Search for LLM models
-            llm_models = self.hf_api.list_models(
-                filter=ModelFilter(
-                    task="text-generation",
-                    library="transformers"
-                ),
-                limit=50
-            )
-            
-            for model in llm_models:
-                model_info = ModelInfo(
-                    name=model.id,
-                    source="huggingface",
-                    metadata={
-                        "tags": model.tags,
-                        "downloads": model.downloads,
-                        "likes": model.likes
-                    }
-                )
-                models['llm'].append(model_info)
-            
-            # Search for embedding models
-            embedding_models = self.hf_api.list_models(
-                filter=ModelFilter(
-                    task="sentence-similarity",
-                    library="transformers"
-                ),
-                limit=20
-            )
-            
-            for model in embedding_models:
-                model_info = ModelInfo(
-                    name=model.id,
-                    source="huggingface",
-                    metadata={
-                        "tags": model.tags,
-                        "downloads": model.downloads,
-                        "likes": model.likes
-                    }
-                )
-                models['embedding'].append(model_info)
-                
-        except Exception as e:
-            print(f"Error discovering Hugging Face models: {e}")
-        
-        return models
-
-    def get_model_info(self, model_name: str) -> Optional[ModelInfo]:
-        """Get detailed information about a specific model."""
-        for model_type, models in self.resources['models'].items():
-            for model in models:
-                if model.name == model_name:
-                    return model
-        return None
-
-    def download_model(self, model_name: str, model_type: str = 'llm') -> Optional[ModelInfo]:
-        """Download a model from Hugging Face."""
-        try:
-            # Check if model exists locally first
-            local_model = self.get_model_info(model_name)
-            if local_model and local_model.source == "local":
-                return local_model
-            
-            # Download from Hugging Face
-            model_path = self.base_dir / "models" / model_type / model_name
-            model_path.mkdir(parents=True, exist_ok=True)
-            
-            # Use transformers to download
-            from transformers import AutoModel, AutoTokenizer
-            
-            model = AutoModel.from_pretrained(model_name)
-            tokenizer = AutoTokenizer.from_pretrained(model_name)
-            
-            # Save locally
-            model.save_pretrained(model_path)
-            tokenizer.save_pretrained(model_path)
-            
-            # Create model info
-            model_info = ModelInfo(
-                name=model_name,
-                path=model_path,
-                source="local",
-                format="transformers",
-                metadata={
-                    "original_source": "huggingface",
-                    "model_type": model_type
-                }
-            )
-            
-            # Update resources
-            self.resources['models'][model_type].append(model_info)
-            
-            return model_info
-            
-        except Exception as e:
-            print(f"Error downloading model {model_name}: {e}")
-            return None
-
     def discover_notebooks(self) -> Dict[str, List[str]]:
         """Discover available Jupyter notebooks."""
         notebooks = {

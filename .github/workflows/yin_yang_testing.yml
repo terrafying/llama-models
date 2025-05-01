@@ -1,0 +1,98 @@
+name: Yin-Yang Test Evolution
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+
+jobs:
+  yin-yang-testing:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov
+        pip install -r requirements.txt
+
+    - name: Run Yin-Yang Tests
+      id: yin_yang_tests
+      run: |
+        # Create test branches from current and target branch
+        CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+        TARGET_BRANCH=$(git rev-parse --abbrev-ref HEAD@{upstream})
+        
+        # Run tests on both branches
+        echo "Running tests on $CURRENT_BRANCH (Yin)"
+        pytest tests/test_yin_yang.py -v --cov=ragtime_llm --cov-report=xml:coverage_yin.xml
+        
+        echo "Running tests on $TARGET_BRANCH (Yang)"
+        git checkout $TARGET_BRANCH
+        pytest tests/test_yin_yang.py -v --cov=ragtime_llm --cov-report=xml:coverage_yang.xml
+        
+        # Return to original branch
+        git checkout $CURRENT_BRANCH
+
+    - name: Analyze Test Results
+      id: analyze_tests
+      run: |
+        # Parse coverage reports
+        YIN_COVERAGE=$(grep -o 'line-rate="[0-9.]*"' coverage_yin.xml | cut -d'"' -f2)
+        YANG_COVERAGE=$(grep -o 'line-rate="[0-9.]*"' coverage_yang.xml | cut -d'"' -f2)
+        
+        # Calculate combined metrics
+        COMBINED_COVERAGE=$(echo "($YIN_COVERAGE + $YANG_COVERAGE) / 2" | bc)
+        
+        # Set outputs for later steps
+        echo "yin_coverage=$YIN_COVERAGE" >> $GITHUB_OUTPUT
+        echo "yang_coverage=$YANG_COVERAGE" >> $GITHUB_OUTPUT
+        echo "combined_coverage=$COMBINED_COVERAGE" >> $GITHUB_OUTPUT
+
+    - name: Auto-Merge Decision
+      id: auto_merge
+      run: |
+        # Check if we meet auto-merge criteria
+        if (( $(echo "${{ steps.analyze_tests.outputs.combined_coverage }} >= 0.8" | bc -l) )); then
+          echo "auto_merge=true" >> $GITHUB_OUTPUT
+          echo "merge_reason=High test coverage and passing tests" >> $GITHUB_OUTPUT
+        else
+          echo "auto_merge=false" >> $GITHUB_OUTPUT
+          echo "merge_reason=Test coverage below threshold" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Auto-Merge PR
+      if: steps.auto_merge.outputs.auto_merge == 'true' && github.event_name == 'pull_request'
+      run: |
+        gh pr merge ${{ github.event.pull_request.number }} --merge --delete-branch
+
+    - name: Create Test Evolution Report
+      if: always()
+      run: |
+        echo "## Yin-Yang Test Evolution Report" >> $GITHUB_STEP_SUMMARY
+        echo "### Coverage Metrics" >> $GITHUB_STEP_SUMMARY
+        echo "- Yin Branch Coverage: ${{ steps.analyze_tests.outputs.yin_coverage }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Yang Branch Coverage: ${{ steps.analyze_tests.outputs.yang_coverage }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Combined Coverage: ${{ steps.analyze_tests.outputs.combined_coverage }}" >> $GITHUB_STEP_SUMMARY
+        echo "### Auto-Merge Decision" >> $GITHUB_STEP_SUMMARY
+        echo "- Status: ${{ steps.auto_merge.outputs.auto_merge == 'true' && 'Approved' || 'Pending Review' }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Reason: ${{ steps.auto_merge.outputs.merge_reason }}" >> $GITHUB_STEP_SUMMARY
+
+    - name: Notify on Manual Review Needed
+      if: steps.auto_merge.outputs.auto_merge == 'false' && github.event_name == 'pull_request'
+      run: |
+        gh pr comment ${{ github.event.pull_request.number }} --body "⚠️ Manual review required: ${{ steps.auto_merge.outputs.merge_reason }}" 

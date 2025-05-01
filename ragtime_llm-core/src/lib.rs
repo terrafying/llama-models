@@ -8,16 +8,22 @@ use tokio::sync::RwLock;
 use tracing::{info, error, warn};
 use thiserror::Error;
 use serde::{Serialize, Deserialize};
+use pyo3::prelude::*;
+use pyo3::types::PyDict;
+use std::path::PathBuf;
+use std::collections::HashMap;
 
 mod distributed;
 mod resource;
 mod vector;
 mod error;
+mod discovery;
 
 pub use distributed::*;
 pub use resource::*;
 pub use vector::*;
 pub use error::*;
+use discovery::{ResourceDiscovery, DiscoveryConfig, ModelInfo};
 
 /// Core configuration for the Ragtime LLM toolkit
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -175,5 +181,145 @@ mod tests {
         let results = engine.process_batch(items).await.unwrap();
         
         assert_eq!(results.len(), 5);
+    }
+}
+
+#[pymodule]
+fn ragtime_llm(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+    m.add_class::<PyResourceDiscovery>()?;
+    m.add_class::<PyModelInfo>()?;
+    Ok(())
+}
+
+#[pyclass]
+struct PyModelInfo {
+    inner: ModelInfo,
+}
+
+#[pymethods]
+impl PyModelInfo {
+    #[new]
+    fn new(
+        name: String,
+        path: String,
+        model_type: String,
+        size_bytes: u64,
+        last_modified: String,
+        metadata: HashMap<String, String>,
+    ) -> PyResult<Self> {
+        let path = PathBuf::from(path);
+        let last_modified = chrono::DateTime::parse_from_rfc3339(&last_modified)
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?
+            .with_timezone(&chrono::Utc);
+
+        Ok(Self {
+            inner: ModelInfo {
+                name,
+                path,
+                model_type,
+                size_bytes,
+                last_modified,
+                metadata,
+            },
+        })
+    }
+
+    #[getter]
+    fn name(&self) -> String {
+        self.inner.name.clone()
+    }
+
+    #[getter]
+    fn path(&self) -> String {
+        self.inner.path.to_string_lossy().into_owned()
+    }
+
+    #[getter]
+    fn model_type(&self) -> String {
+        self.inner.model_type.clone()
+    }
+
+    #[getter]
+    fn size_bytes(&self) -> u64 {
+        self.inner.size_bytes
+    }
+
+    #[getter]
+    fn last_modified(&self) -> String {
+        self.inner.last_modified.to_rfc3339()
+    }
+
+    #[getter]
+    fn metadata(&self) -> HashMap<String, String> {
+        self.inner.metadata.clone()
+    }
+}
+
+#[pyclass]
+struct PyResourceDiscovery {
+    inner: ResourceDiscovery,
+}
+
+#[pymethods]
+impl PyResourceDiscovery {
+    #[new]
+    fn new(
+        search_paths: Vec<String>,
+        model_patterns: Vec<String>,
+        cache_ttl_seconds: u64,
+        max_parallel_searches: usize,
+    ) -> PyResult<Self> {
+        let config = DiscoveryConfig {
+            search_paths: search_paths.into_iter().map(PathBuf::from).collect(),
+            model_patterns,
+            cache_ttl_seconds,
+            max_parallel_searches,
+        };
+
+        Ok(Self {
+            inner: ResourceDiscovery::new(config),
+        })
+    }
+
+    fn discover_models(&self, py: Python<'_>) -> PyResult<Vec<PyModelInfo>> {
+        py.allow_threads(|| {
+            let runtime = tokio::runtime::Runtime::new()
+                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+            
+            runtime.block_on(async {
+                let models = self.inner.discover_models().await
+                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+                
+                Ok(models.into_iter()
+                    .map(|m| PyModelInfo { inner: m })
+                    .collect())
+            })
+        })
+    }
+
+    fn get_model_info(&self, py: Python<'_>, name: &str) -> PyResult<Option<PyModelInfo>> {
+        py.allow_threads(|| {
+            let runtime = tokio::runtime::Runtime::new()
+                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+            
+            runtime.block_on(async {
+                let model = self.inner.get_model_info(name).await
+                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+                
+                Ok(model.map(|m| PyModelInfo { inner: m }))
+            })
+        })
+    }
+
+    fn clear_cache(&self, py: Python<'_>) -> PyResult<()> {
+        py.allow_threads(|| {
+            let runtime = tokio::runtime::Runtime::new()
+                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+            
+            runtime.block_on(async {
+                self.inner.clear_cache().await;
+                Ok(())
+            })
+        })
     }
 } 
