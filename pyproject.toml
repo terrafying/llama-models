@@ -1,53 +1,85 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "ragtime-llm"
 version = "0.1.0"
-description = "A Joplin-inspired RAG system for YouTube videos with GPU acceleration"
-readme = "README.md"
-requires-python = ">=3.12"
+description = "A powerful RAG system for processing and querying YouTube videos using distributed computing"
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
 dependencies = [
-    "gradio>=5.27.1",
-    "librosa>=0.11.0",
-    "llama-cpp-python>=0.3.8",
-    "matplotlib>=3.10.1",
-    "moviepy>=2.1.2",
-    "numpy>=2.2.5",
-    "openai>=1.76.0",
-    "openai-whisper>=20240930",
-    "opencv-python>=4.11.0.86",
-    "pillow>=10.4.0",
-    "pydub>=0.25.1",
-    "python-speech-features>=0.6",
-    "pytube>=15.0.0",
-    "requests>=2.32.3",
-    "sentence-transformers>=4.1.0",
-    "tiktoken>=0.9.0",
-    "torch>=2.7.0",
-    "torchaudio>=2.7.0",
-    "whisper>=1.1.10",
-    "youtube-transcript-api>=1.0.3",
+    "numpy>=1.24.0",
+    "torch>=2.0.0",
+    "transformers>=4.30.0",
+    "sentence-transformers>=2.2.0",
+    "faiss-cpu>=1.7.0",
+    "faiss-gpu>=1.7.0; platform_system != 'Darwin'",
+    "pytube>=12.0.0",
+    "youtube-transcript-api>=0.6.0",
+    "whisper>=1.0.0",
+    "moviepy>=1.0.3",
+    "gradio>=3.50.0",
+    "openai>=1.0.0",
+    "requests>=2.31.0",
+    "pillow>=10.0.0",
+    "tiktoken>=0.5.0",
+    "python-dotenv>=1.0.0",
+    "tqdm>=4.65.0",
+    "ray>=2.9.0",
+    "ray[default]>=2.9.0",
+    "ray[tune]>=2.9.0",
+    "ray[rllib]>=2.9.0",
+    "ray[serve]>=2.9.0"
+]
+requires-python = ">=3.8"
+readme = "README.md"
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
 ]
 
-[build-system]
-requires = ["setuptools>=42", "wheel"]
-build-backend = "setuptools.build_meta"
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0"
+]
+
+[tool.setuptools]
+packages = ["ragtime_llm"]
+
+[tool.black]
+line-length = 88
+target-version = ["py38"]
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-v --cov=ragtime_llm"
-asyncio_mode = "strict"
-
-[tool.coverage.run]
-source = ["ragtime_llm"]
-omit = ["tests/*", "setup.py"]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "if self.debug:",
-    "raise NotImplementedError",
-    "if __name__ == .__main__.:",
-    "pass",
-    "raise ImportError",
-]

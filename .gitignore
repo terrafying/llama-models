@@ -55,7 +55,4 @@ youtube_rag/
 *.mp4
 *.wav
 *.mp3
-
-# Virtual environments
-.cache/*
 models/*.gguf
