@@ -1,21 +1,43 @@
-# Core dependencies
+# Core ML dependencies
 numpy>=1.26.0
 torch>=2.2.0
 transformers>=4.38.0
 sentence-transformers>=2.2.0
 faiss-cpu>=1.7.4
-faiss-gpu>=1.7.0; platform_system != "Darwin"
-pytube>=12.0.0
-youtube-transcript-api>=0.6.0
+accelerate>=0.27.0
+sentencepiece>=0.2.0
+
+# Audio processing
+librosa>=0.10.0
 whisper>=1.0.0
 moviepy>=1.0.3
+
+# Web and API
 gradio>=3.50.0
 openai>=1.0.0
 requests>=2.31.0
+pytube>=12.0.0
+youtube-transcript-api>=0.6.0
+
+# Utilities
 pillow>=10.0.0
 tiktoken>=0.5.0
 python-dotenv>=1.0.0
 tqdm>=4.65.0
+ipfshttpclient<=0.8.0a2
+
+# Development tools
+ipykernel>=6.29.0
+matplotlib>=3.8.0
+black>=23.0.0
+isort>=5.12.0
+flake8>=6.0.0
+mypy>=1.0.0
+
+# Testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-asyncio>=0.21.0
 
 # Distributed processing
 ray>=2.9.0
@@ -23,32 +45,3 @@ ray[default]>=2.9.0
 ray[tune]>=2.9.0
 ray[rllib]>=2.9.0
 ray[serve]>=2.9.0
-
-# Testing
-pytest>=7.0.0
-pytest-cov>=4.0.0
-pytest-asyncio>=0.21.0
-
-# Development
-black>=23.0.0
-isort>=5.12.0
-flake8>=6.0.0
-mypy>=1.0.0
-
-# Added ipfshttpclient
-ipfshttpclient<=0.8.0a2
-
-# Added accelerate
-accelerate>=0.27.0
-
-# Added sentencepiece
-sentencepiece>=0.2.0
-
-# Added ipykernel
-ipykernel>=6.29.0
-
-# Added matplotlib
-matplotlib>=3.8.0
-
-# Added librosa
-librosa>=0.10.0

@@ -6,6 +6,7 @@ import os
 import gradio as gr
 from typing import Optional, Dict, List
 import json
+from pathlib import Path
 
 from ragtime_llm.utils.logger import logger
 from ragtime_llm.utils.ui_utils import get_emoji
@@ -15,8 +16,37 @@ from ragtime_llm.utils.storage_manager import StorageManager
 # Initialize storage manager
 storage_manager = StorageManager()
 
+# Auto-discover available models and resources
+def discover_resources():
+    """Discover available models and resources."""
+    resources = {
+        'models': [],
+        'videos': [],
+        'playlists': []
+    }
+    
+    # Discover models
+    models_dir = Path('models')
+    if models_dir.exists():
+        resources['models'] = [f.name for f in models_dir.glob('*.pt')]
+    
+    # Discover processed videos
+    videos_dir = Path('output/videos')
+    if videos_dir.exists():
+        resources['videos'] = [f.name for f in videos_dir.glob('*.mp4')]
+    
+    # Discover playlists
+    playlists_dir = Path('output/playlists')
+    if playlists_dir.exists():
+        resources['playlists'] = [f.name for f in playlists_dir.glob('*.json')]
+    
+    return resources
+
 def create_interface():
     """Create Gradio interface."""
+    # Discover available resources
+    resources = discover_resources()
+    
     # Custom CSS
     custom_css = """
     .gradio-container {
@@ -152,6 +182,13 @@ def create_interface():
                             label="YouTube Video URL",
                             placeholder="Enter YouTube video URL..."
                         )
+                        # Add model selection if available
+                        if resources['models']:
+                            model_dropdown = gr.Dropdown(
+                                choices=resources['models'],
+                                label="Select Model",
+                                value=resources['models'][0] if resources['models'] else None
+                            )
                         max_tokens = gr.Slider(
                             minimum=100,
                             maximum=4000,
@@ -170,6 +207,11 @@ def create_interface():
                     
                     with gr.Column():
                         output = gr.Markdown(label="Processing Results")
+                        # Add processed videos list if available
+                        if resources['videos']:
+                            gr.Markdown("### Recently Processed Videos")
+                            for video in resources['videos'][-5:]:  # Show last 5
+                                gr.Markdown(f"- {video}")
             
             # Playlist Processing Tab
             with gr.Tab(f"{get_emoji('video')} Process Playlist"):
@@ -179,6 +221,13 @@ def create_interface():
                             label="YouTube Playlist URL",
                             placeholder="Enter YouTube playlist URL..."
                         )
+                        # Add model selection if available
+                        if resources['models']:
+                            playlist_model_dropdown = gr.Dropdown(
+                                choices=resources['models'],
+                                label="Select Model",
+                                value=resources['models'][0] if resources['models'] else None
+                            )
                         max_videos = gr.Slider(
                             minimum=1,
                             maximum=100,
@@ -203,7 +252,12 @@ def create_interface():
                         process_playlist_btn = gr.Button("Process Playlist")
                     
                     with gr.Column():
-                        playlist_output = gr.Markdown(label="Playlist Processing Results")
+                        playlist_output = gr.Markdown(label="Processing Results")
+                        # Add processed playlists list if available
+                        if resources['playlists']:
+                            gr.Markdown("### Recently Processed Playlists")
+                            for playlist in resources['playlists'][-5:]:  # Show last 5
+                                gr.Markdown(f"- {playlist}")
             
             # Query Tab
             with gr.Tab(f"{get_emoji('search')} Query"):
