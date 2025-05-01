@@ -1,0 +1,11 @@
+ormsgpack-1.7.0.dist-info/INSTALLER,sha256=5hhM4Q4mYTT9z6QB6PGpUAW81PGNFrYrdXMj4oM_6ak,2
+ormsgpack-1.7.0.dist-info/METADATA,sha256=afZQ3GLKOk0-aNsqfSx1D0di-2XhbkDk-APCfOUqF7g,43494
+ormsgpack-1.7.0.dist-info/RECORD,,
+ormsgpack-1.7.0.dist-info/REQUESTED,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0
+ormsgpack-1.7.0.dist-info/WHEEL,sha256=ne6Ae40Z95Cy72sDkFvd0Vc0xuxiI7EPweb6g-K16Y8,148
+ormsgpack-1.7.0.dist-info/licenses/LICENSE-APACHE,sha256=pg7qgXUUUxZo1-AHZXMUSf4U0FnTJJ4LyTs23kX3WfI,10847
+ormsgpack-1.7.0.dist-info/licenses/LICENSE-MIT,sha256=I_GOA9xJ35FiL-KnYXZJdATkbO2KcV2dK2enRGVxzKM,1023
+ormsgpack/__init__.py,sha256=y2swa-lI48X2c1GOtb17W8odG52evFRwiaRZOMM2Xsk,926
+ormsgpack/__init__.pyi,sha256=ofNiJ8ppBK3vCcLvw-vvk8BpbELhnn9ceHsOc8ptPOk,818
+ormsgpack/ormsgpack.cpython-312-darwin.so,sha256=_YW2nNTkSDtq9A3JrCWTrdVO6z0nGHbvQrFl36lqTDY,798176
+ormsgpack/py.typed,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0

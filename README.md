@@ -73,6 +73,77 @@ sudo apt-get install ipfs
 ipfs daemon
 ```
 
+## Version Control and Indexing
+
+This project uses Git for version control and includes specific rules for what should and should not be tracked. Here's what you need to know:
+
+### Excluded from Version Control
+
+The following items are excluded from Git tracking:
+
+1. **Generated Files and Caches**
+   - Build artifacts and compiled files
+   - Cache directories (`.cache/`, `__pycache__/`)
+   - Test coverage reports
+   - Documentation builds
+
+2. **Environment and Dependencies**
+   - Virtual environments (`.venv/`, `env/`)
+   - Environment files (`.env`)
+   - Python version files (`.python-version`)
+
+3. **Large Files and Models**
+   - Model files (`.gguf`, `.bin`, `.pt`, `.pth`, `.onnx`, `.safetensors`)
+   - Dataset files (`.npy`, `.npz`, `.h5`, `.pkl`)
+   - Media files (`.mp4`, `.wav`, `.mp3`)
+   - Archive files (`.zip`, `.tar.gz`, `.rar`, `.7z`)
+
+4. **IDE and Editor Files**
+   - VS Code settings (`.vscode/`)
+   - PyCharm files (`.idea/`)
+   - Sublime Text files (`.sublime-*`)
+   - Vim swap files (`.swp`, `.swo`)
+
+5. **System Files**
+   - macOS system files (`.DS_Store`)
+   - Temporary files (`*.tmp`, `*.temp`, `*.bak`)
+
+### Included in Version Control
+
+The following items are explicitly included:
+
+1. **Configuration Files**
+   - JSON configs in `config/` directory
+   - Test JSON files in `tests/` directory
+   - Example JSON files in `examples/` directory
+
+2. **Source Code**
+   - Python source files (`.py`)
+   - Type hints (`.pyi`)
+   - Documentation source (`.md`, `.rst`)
+
+3. **Project Files**
+   - Dependency specifications (`requirements.txt`, `pyproject.toml`)
+   - CI/CD configurations (`.github/`)
+   - License and documentation
+
+### Best Practices
+
+1. **Large Files**
+   - Store large files (>50MB) in IPFS or local volumes
+   - Use Git LFS for files between 10MB and 50MB
+   - Keep model files in separate storage
+
+2. **Sensitive Information**
+   - Never commit API keys or secrets
+   - Use environment variables for sensitive data
+   - Keep `.env` files local and untracked
+
+3. **Development**
+   - Use pre-commit hooks for code quality
+   - Run tests before committing
+   - Keep commits focused and well-documented
+
 ## Storage Configuration
 
 The system supports multiple storage backends:

@@ -19,6 +19,16 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+.ruff_cache/
 
 # Virtual Environment
 .env
@@ -26,6 +36,7 @@ wheels/
 env/
 venv/
 ENV/
+.python-version
 
 # IDE
 .idea/
@@ -33,26 +44,53 @@ ENV/
 *.swp
 *.swo
 .DS_Store
-
-# Testing
-.coverage
-.coverage.*
-htmlcov/
-.pytest_cache/
-.tox/
-nosetests.xml
-coverage.xml
-*.cover
-
-# Logs
-logs/
-*.log
+*.sublime-workspace
+*.sublime-project
 
 # Project specific
 output/
 youtube_rag/
 .cache/
+models/
+llama_models/
+downloads/
+logs/
 *.mp4
 *.wav
 *.mp3
-models/*.gguf
+*.gguf
+*.bin
+*.pt
+*.pth
+*.onnx
+*.safetensors
+*.ckpt
+*.pkl
+*.h5
+*.npy
+*.npz
+*.json
+!config/*.json
+!tests/*.json
+!examples/*.json
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Large files and datasets
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.db
+*.sqlite
+*.sqlite3
+
+# Documentation
+docs/_build/
+docs/_static/
+docs/_templates/
