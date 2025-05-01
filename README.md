@@ -24,12 +24,28 @@ git clone git@github.com:terrafying/llama-models.git
 cd llama-models
 ```
 
-2. Install dependencies:
+2. Install uv (if not already installed):
 ```bash
-pip install -r requirements.txt
+# Using pip
+pip install uv
+
+# Or using Homebrew on macOS
+brew install uv
 ```
 
-3. (Optional) Install IPFS for distributed storage:
+3. Install dependencies using uv:
+```bash
+# Create and activate virtual environment
+uv venv
+source .venv/bin/activate  # On Unix/macOS
+# or
+.venv\Scripts\activate  # On Windows
+
+# Install dependencies
+uv pip install -r requirements.txt
+```
+
+4. (Optional) Install IPFS for distributed storage:
 ```bash
 # macOS
 brew install ipfs
@@ -324,18 +340,31 @@ We welcome contributions to improve the RAG-LLM system! Here's how you can help:
 
 1. Install development dependencies:
 ```bash
-pip install -r requirements.txt
-pip install -e ".[dev]"
+# Create and activate virtual environment if not already done
+uv venv
+source .venv/bin/activate  # On Unix/macOS
+# or
+.venv\Scripts\activate  # On Windows
+
+# Install dependencies including dev extras
+uv pip install -r requirements.txt
+uv pip install -e ".[dev]"
 ```
 
 2. Set up pre-commit hooks:
 ```bash
+uv pip install pre-commit
 pre-commit install
 ```
 
 3. Run tests:
 ```bash
-pytest tests/
+# Basic tests
+uv pip install pytest pytest-cov
+python -m pytest tests/
+
+# With coverage
+python -m pytest --cov=ragtime_llm tests/
 ```
 
 ### Code Style
@@ -348,6 +377,7 @@ We use:
 
 Run the formatters:
 ```bash
+uv pip install black isort
 black .
 isort .
 ```
@@ -362,3 +392,27 @@ isort .
 ## License
 
 MIT License
+
+## Example Notebooks
+
+Our example notebooks demonstrate various features and utilities of the RAG-LLM system:
+
+### Core Utilities
+- [Storage Manager](notebooks/storage_manager.ipynb) - Managing files across different storage backends
+- [Logger](notebooks/logger.ipynb) - Structured logging across the project
+- [UI Utilities](notebooks/ui_utils.ipynb) - Creating consistent and user-friendly interfaces
+- [Model Exploration](notebooks/model_exploration.ipynb) - Exploring available models and their capabilities
+- [Video Processing](notebooks/video_processing.ipynb) - Processing videos and playlists
+
+### Analysis
+- [Phonetic Analysis](notebooks/phonetic_analysis.ipynb) - Analyzing phonetic patterns in content
+- [Content Analysis](notebooks/content_analysis.ipynb) - Analyzing content patterns and trends
+
+### Tutorials
+- [Getting Started](notebooks/getting_started.ipynb) - Quick start guide
+- [Advanced Usage](notebooks/advanced_usage.ipynb) - Advanced features and techniques
+
+You can view these notebooks:
+- Directly in the repository
+- On [GitHub Pages](https://your-username.github.io/ragtime)
+- Using [Jupyter nbviewer](https://nbviewer.jupyter.org/github/your-username/ragtime/tree/main/notebooks/)

@@ -1,0 +1,126 @@
+name: Model Benchmarking
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'ragtime_llm/core/**'
+      - 'benchmarks/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'ragtime_llm/core/**'
+      - 'benchmarks/**'
+  workflow_dispatch:
+    inputs:
+      model_type:
+        description: 'Model type to benchmark'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - llm
+          - embedding
+          - audio
+          - video
+
+jobs:
+  benchmark:
+    name: Benchmark Models
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: cuda
+            cuda: true
+            gpu: true
+          - name: cpu
+            cuda: false
+            gpu: false
+            
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Set up CUDA
+      if: matrix.cuda
+      uses: pytorch/test-infra@main
+      with:
+        cuda: '11.8'
+        
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+        
+    - name: Cache models
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/huggingface
+          .cache/models
+        key: ${{ runner.os }}-models-${{ matrix.name }}-${{ hashFiles('config/base.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-models-${{ matrix.name }}-
+          
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install unsloth
+        pip install torch --index-url https://download.pytorch.org/whl/cu118
+        
+    - name: Run benchmarks
+      env:
+        HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
+        CUDA_VISIBLE_DEVICES: ${{ matrix.cuda && '0' || '' }}
+      run: |
+        python benchmarks/run_benchmarks.py \
+          --model-type ${{ github.event.inputs.model_type || 'all' }} \
+          --device ${{ matrix.name }} \
+          --output-dir benchmark-results/${{ matrix.name }}
+          
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-results-${{ matrix.name }}
+        path: benchmark-results/${{ matrix.name }}
+        
+  analyze:
+    name: Analyze Results
+    needs: benchmark
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download benchmark results
+      uses: actions/download-artifact@v3
+      with:
+        path: benchmark-results
+        
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pandas matplotlib seaborn
+        
+    - name: Generate analysis
+      run: |
+        python benchmarks/analyze_results.py \
+          --input-dir benchmark-results \
+          --output-dir analysis-results
+          
+    - name: Upload analysis
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-analysis
+        path: analysis-results 

@@ -15,7 +15,6 @@ dependencies = [
     "transformers>=4.30.0",
     "sentence-transformers>=2.2.0",
     "faiss-cpu>=1.7.0",
-    "faiss-gpu>=1.7.0; platform_system != 'Darwin'",
     "pytube>=12.0.0",
     "youtube-transcript-api>=0.6.0",
     "whisper>=1.0.0",
@@ -31,7 +30,10 @@ dependencies = [
     "ray[default]>=2.9.0",
     "ray[tune]>=2.9.0",
     "ray[rllib]>=2.9.0",
-    "ray[serve]>=2.9.0"
+    "ray[serve]>=2.9.0",
+    "pandas>=2.2.3",
+    "pluggy>=1.5.0",
+    "pytest>=8.3.5",
 ]
 requires-python = ">=3.11"
 readme = "README.md"
@@ -85,4 +87,21 @@ disallow_incomplete_defs = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "-v --cov=ragtime_llm"
+addopts = "-v"
+
+[tool.coverage.run]
+source = ["ragtime_llm"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass",
+    "raise ImportError",
+]
+ignore_errors = true
+omit = ["tests/*", "setup.py"]
