@@ -40,12 +40,15 @@ class ErrorAnalyzer:
             'type_error': r"TypeError.*?([^']+)",
             'value_error': r"ValueError.*?([^']+)",
             'assertion_error': r"AssertionError.*?([^']+)",
+            'api_key_error': r"api_key.*?must be set",
+            'huggingface_error': r"cannot import name '([^']+)' from 'huggingface_hub'",
         }
 
     def extract_error_context(self, error_output: str) -> List[ErrorContext]:
         """Extract structured error context from test output."""
         contexts = []
         current_error = None
+        current_traceback = []
         
         for line in error_output.splitlines():
             # Match test collection errors
@@ -58,6 +61,7 @@ class ErrorAnalyzer:
                         test_name=test_name.group(1)
                     )
                     contexts.append(current_error)
+                    current_traceback = []
             
             # Match traceback lines
             elif current_error and line.strip().startswith("File"):
@@ -65,10 +69,12 @@ class ErrorAnalyzer:
                 if file_match:
                     current_error.file_path = file_match.group(1)
                     current_error.line_number = int(file_match.group(2))
+                    current_traceback.append(line)
             
             # Match error messages
-            elif current_error and any(err in line for err in ["Error:", "Exception:"]):
+            elif current_error and any(err in line for err in ["Error:", "Exception:", "E   "]):
                 current_error.error_message = line.strip()
+                current_traceback.append(line)
             
             # Match module imports
             elif "import" in line.lower() and "error" in line.lower():
@@ -80,6 +86,37 @@ class ErrorAnalyzer:
                         module_name=module_match.group(1)
                     )
                     contexts.append(current_error)
+                    current_traceback = []
+            
+            # Match API key errors
+            elif "api_key" in line.lower() and "must be set" in line.lower():
+                current_error = ErrorContext(
+                    error_type="api_key_error",
+                    error_message=line,
+                    module_name="openai" if "openai" in line.lower() else "anthropic"
+                )
+                contexts.append(current_error)
+                current_traceback = []
+            
+            # Match HuggingFace errors
+            elif "huggingface_hub" in line and "cannot import name" in line:
+                match = re.search(r"cannot import name '([^']+)' from 'huggingface_hub'", line)
+                if match:
+                    current_error = ErrorContext(
+                        error_type="huggingface_error",
+                        error_message=line,
+                        module_name=match.group(1)
+                    )
+                    contexts.append(current_error)
+                    current_traceback = []
+            
+            # Collect traceback
+            elif current_error and line.strip():
+                current_traceback.append(line)
+        
+        # Add traceback to the last error if we have one
+        if current_error and current_traceback:
+            current_error.traceback = "\n".join(current_traceback)
         
         return contexts
 
@@ -103,6 +140,7 @@ class ErrorAnalyzer:
         Line: {error_context.line_number}
         Test: {error_context.test_name}
         Module: {error_context.module_name}
+        Traceback: {error_context.traceback}
         
         Please provide:
         1. Root cause analysis
@@ -131,11 +169,43 @@ class ErrorAnalyzer:
                 "priority": "high",
                 "suggested_fixes": [
                     f"Install missing package: {error_context.module_name}",
-                    "Check requirements.txt for correct version"
+                    "Check requirements.txt for correct version",
+                    "Run 'pip install -r requirements.txt' to install all dependencies"
                 ],
                 "prevention_strategies": [
                     "Maintain up-to-date requirements.txt",
-                    "Use dependency management tools"
+                    "Use dependency management tools",
+                    "Run tests in a clean virtual environment"
+                ]
+            }
+        elif error_context.error_type == "api_key_error":
+            return {
+                "analysis": "Missing API key",
+                "priority": "high",
+                "suggested_fixes": [
+                    f"Set {error_context.module_name.upper()}_API_KEY environment variable",
+                    f"Add API key to .env file",
+                    "Check API key configuration in settings"
+                ],
+                "prevention_strategies": [
+                    "Use environment variables for API keys",
+                    "Implement API key validation on startup",
+                    "Add API key checks to CI/CD pipeline"
+                ]
+            }
+        elif error_context.error_type == "huggingface_error":
+            return {
+                "analysis": "HuggingFace Hub compatibility issue",
+                "priority": "high",
+                "suggested_fixes": [
+                    "Update huggingface-hub package",
+                    f"Check compatibility of {error_context.module_name} with current version",
+                    "Consider using a different version of the package"
+                ],
+                "prevention_strategies": [
+                    "Pin specific versions in requirements.txt",
+                    "Test with multiple package versions",
+                    "Monitor package updates and compatibility"
                 ]
             }
         return {

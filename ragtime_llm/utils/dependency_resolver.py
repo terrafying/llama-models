@@ -4,6 +4,7 @@ Handles dynamic dependency installation and resolution using uv.
 """
 
 import importlib
+import os
 import re
 import subprocess
 import sys
@@ -26,7 +27,24 @@ class DependencyResolver:
         self.requirements_file = self.project_root / "requirements.txt"
         self.requirements_in_file = self.project_root / "requirements.in"
         self.installed_packages: Set[str] = set()
+        self._ensure_uv_installed()
         self._load_installed_packages()
+
+    def _ensure_uv_installed(self) -> None:
+        """Ensure uv is installed and available."""
+        try:
+            subprocess.run(["uv", "--version"], capture_output=True, check=True)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            console.print("[yellow]uv not found. Installing uv...[/yellow]")
+            try:
+                subprocess.run(
+                    [sys.executable, "-m", "pip", "install", "uv"],
+                    check=True,
+                    capture_output=True
+                )
+            except subprocess.CalledProcessError as e:
+                console.print(f"[red]Failed to install uv: {e.stderr.decode()}[/red]")
+                raise RuntimeError("Failed to install uv package manager")
 
     def _find_project_root(self) -> Path:
         """Find the project root by looking for pyproject.toml or setup.py."""
@@ -40,20 +58,32 @@ class DependencyResolver:
     def _load_installed_packages(self) -> None:
         """Load the list of currently installed packages."""
         try:
+            # First try with uv
             result = subprocess.run(
                 ["uv", "pip", "list", "--format=freeze"],
                 capture_output=True,
                 text=True,
                 check=True
             )
-            self.installed_packages = {
-                line.split("==")[0].lower()
-                for line in result.stdout.splitlines()
-                if line and not line.startswith("-")
-            }
         except subprocess.CalledProcessError:
-            console.print("[yellow]Warning: Could not load installed packages list[/yellow]")
-            self.installed_packages = set()
+            # Fallback to pip if uv fails
+            try:
+                result = subprocess.run(
+                    [sys.executable, "-m", "pip", "list", "--format=freeze"],
+                    capture_output=True,
+                    text=True,
+                    check=True
+                )
+            except subprocess.CalledProcessError:
+                console.print("[yellow]Warning: Could not load installed packages list[/yellow]")
+                self.installed_packages = set()
+                return
+
+        self.installed_packages = {
+            line.split("==")[0].lower()
+            for line in result.stdout.splitlines()
+            if line and not line.startswith("-")
+        }
 
     def _parse_import_error(self, error_msg: str) -> Optional[str]:
         """Parse an ImportError message to extract the missing package name."""
@@ -71,6 +101,7 @@ class DependencyResolver:
                 package_map = {
                     'cv2': 'opencv-python',
                     'PIL': 'pillow',
+                    'moviepy.editor': 'moviepy',
                 }
                 return package_map.get(package, package)
         return None
@@ -89,18 +120,31 @@ class DependencyResolver:
         return None
 
     def install_package(self, package: str) -> bool:
-        """Install a package using uv."""
+        """Install a package using uv or pip as fallback."""
         try:
             version = self._get_package_version_from_requirements(package)
             package_spec = f"{package}>={version}" if version else package
             
             console.print(f"[cyan]Installing {package_spec}...[/cyan]")
-            subprocess.run(
-                ["uv", "pip", "install", package_spec],
-                check=True,
-                capture_output=True,
-                text=True
-            )
+            
+            # Try uv first
+            try:
+                subprocess.run(
+                    ["uv", "pip", "install", package_spec],
+                    check=True,
+                    capture_output=True,
+                    text=True
+                )
+            except subprocess.CalledProcessError:
+                # Fallback to pip if uv fails
+                console.print(f"[yellow]uv installation failed, falling back to pip...[/yellow]")
+                subprocess.run(
+                    [sys.executable, "-m", "pip", "install", package_spec],
+                    check=True,
+                    capture_output=True,
+                    text=True
+                )
+            
             self.installed_packages.add(package.lower())
             return True
         except subprocess.CalledProcessError as e:
