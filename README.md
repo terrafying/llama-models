@@ -359,13 +359,22 @@ pre-commit install
 
 3. Run tests:
 ```bash
-# Basic tests
-uv pip install pytest pytest-cov
-python -m pytest tests/
+# Using the auto-resolving test runner (recommended)
+./scripts/auto_test.py                    # Run all tests
+./scripts/auto_test.py tests/test_rag.py  # Run specific test file
+./scripts/auto_test.py --coverage         # Run with coverage
+./scripts/auto_test.py -vv               # Run with increased verbosity
 
-# With coverage
+# Or run pytest directly
+python -m pytest tests/
 python -m pytest --cov=ragtime_llm tests/
 ```
+
+The auto-resolving test runner will:
+- Automatically detect and install missing dependencies
+- Handle common package name variations (e.g., cv2 → opencv-python)
+- Retry tests after installing dependencies
+- Show colorized output with dependency resolution progress
 
 ### Code Style
 

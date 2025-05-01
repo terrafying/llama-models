@@ -1,0 +1,53 @@
+# Production configuration for RAGtime
+
+# Environment settings
+environment: production
+
+# Model configurations
+models:
+  llm:
+    model_id: "meta-llama/Llama-2-13b-chat-hf"  # Larger model for production
+    provider: "huggingface"
+    quantization: "8bit"  # Higher precision for production
+    auto_download: false  # Manual control in production
+    use_metal: true
+    max_memory: {0: "24GB"}  # Explicit memory management
+    device_map: "auto"
+
+  embedding:
+    model_id: "sentence-transformers/all-mpnet-base-v2"  # Better quality embeddings
+    provider: "huggingface"
+    quantization: "8bit"
+    auto_download: false
+    max_memory: {0: "8GB"}
+
+  audio:
+    model_id: "facebook/wav2vec2-large-960h"  # Larger audio model
+    provider: "huggingface"
+    quantization: "8bit"
+    auto_download: false
+    max_memory: {0: "8GB"}
+
+  video:
+    model_id: "microsoft/xclip-large-patch14"  # Larger video model
+    provider: "huggingface"
+    quantization: "8bit"
+    auto_download: false
+    max_memory: {0: "8GB"}
+
+# Storage configuration
+storage:
+  cache_dir: "/var/lib/ragtime/cache"  # Production cache location
+  max_cache_size: 53687091200  # 50GB
+  cleanup_threshold: 0.8  # More conservative cleanup
+  local_volumes:
+    - "/var/lib/ragtime/models"
+    - "/var/lib/ragtime/cache"
+    - "/var/lib/ragtime/data"
+
+# Resource configuration
+resources:
+  max_disk_usage: 0.8  # More conservative disk usage
+  check_interval: 30  # More frequent checks
+  metrics_history: 10000  # More history for analysis
+  min_free_space: 0.3  # More free space required 

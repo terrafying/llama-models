@@ -1,0 +1,48 @@
+# Base configuration for RAGtime
+
+# Environment settings
+environment: development
+
+# Model configurations
+models:
+  llm:
+    model_id: "meta-llama/Llama-2-7b-chat-hf"
+    provider: "huggingface"
+    quantization: "4bit"
+    auto_download: true
+    use_metal: true
+
+  embedding:
+    model_id: "sentence-transformers/all-MiniLM-L6-v2"
+    provider: "huggingface"
+    quantization: "8bit"
+    auto_download: true
+
+  audio:
+    model_id: "facebook/wav2vec2-base-960h"
+    provider: "huggingface"
+    quantization: "8bit"
+    auto_download: true
+
+  video:
+    model_id: "microsoft/xclip-base-patch32"
+    provider: "huggingface"
+    quantization: "8bit"
+    auto_download: true
+
+# Storage configuration
+storage:
+  cache_dir: ".cache"
+  max_cache_size: 10737418240  # 10GB
+  cleanup_threshold: 0.9
+  local_volumes:
+    - "models"
+    - "cache"
+    - "data"
+
+# Resource configuration
+resources:
+  max_disk_usage: 0.9
+  check_interval: 60
+  metrics_history: 1000
+  min_free_space: 0.2 
