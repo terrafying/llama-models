@@ -1,45 +1,179 @@
-name: CI
+name: 🚀 CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  PYTHONPATH: ${{ github.workspace }}
 
 jobs:
-  test:
+  test-python:
+    name: 🐍 Python Tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11"]
-
+        python-version: [3.9, 3.10, 3.11]
+    
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: 🐍 Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     
-    - name: Install uv
+    - name: 📦 Install dependencies
       run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-xdist
     
-    - name: Install dependencies
+    - name: 🧪 Run tests
       run: |
-        uv venv
-        source .venv/bin/activate
-        uv pip install -e ".[dev]"
+        pytest tests/ -v --cov=ragtime_llm --cov-report=xml
     
-    - name: Run tests
-      run: |
-        source .venv/bin/activate
-        python -m pytest tests/
+    - name: 📊 Upload coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: true
+
+  lint-python:
+    name: 🔍 Python Linting
+    runs-on: ubuntu-latest
     
-    - name: Run linting
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: 📦 Install dependencies
       run: |
-        source .venv/bin/activate
+        python -m pip install --upgrade pip
+        pip install flake8 black isort mypy
+        pip install -r requirements.txt
+    
+    - name: 🧹 Run linters
+      run: |
         flake8 ragtime_llm tests
         black --check ragtime_llm tests
-        isort --check-only ragtime_llm tests 
+        isort --check-only ragtime_llm tests
+        mypy ragtime_llm tests
+
+  test-rust:
+    name: 🦀 Rust Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: 🦀 Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+    
+    - name: 🦀 Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: 🧪 Run tests
+      run: |
+        cargo test --verbose
+        cargo clippy -- -D warnings
+        cargo fmt -- --check
+
+  build-rust:
+    name: 🏗️ Build Rust
+    needs: test-rust
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: 🦀 Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+    
+    - name: 🏗️ Build
+      run: cargo build --release
+    
+    - name: 📦 Package
+      run: |
+        mkdir -p dist
+        cp target/release/libragtime_llm.so dist/
+        cp target/release/libragtime_llm.dylib dist/
+        cp target/release/ragtime_llm.dll dist/
+
+  deploy:
+    name: 🚀 Deploy
+    needs: [test-python, lint-python, test-rust, build-rust]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: 📦 Download artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: dist
+    
+    - name: 🚀 Deploy to PyPI
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+      run: |
+        python -m pip install --upgrade twine
+        twine upload dist/*
+    
+    - name: 🏷️ Create release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/libragtime_llm.so
+          dist/libragtime_llm.dylib
+          dist/ragtime_llm.dll
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    name: 📢 Notify
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: 📊 Generate report
+      run: |
+        echo "🎉 Build completed!"
+        echo "📈 Coverage: $(cat coverage.xml | grep -o 'line-rate=\"[0-9.]*\"' | cut -d'"' -f2)"
+        echo "✅ Tests: $(cat coverage.xml | grep -o 'tests=\"[0-9]*\"' | cut -d'"' -f2)"
+        echo "❌ Failures: $(cat coverage.xml | grep -o 'failures=\"[0-9]*\"' | cut -d'"' -f2)"
+    
+    - name: 📨 Send notification
+      if: failure()
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_CHANNEL: builds
+        SLACK_COLOR: danger
+        SLACK_TITLE: Build Failed
+        SLACK_MESSAGE: 'Build failed! Check the logs for details.' 
