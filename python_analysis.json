@@ -1,0 +1,2199 @@
+{
+  "components": {
+    "core.distributed_processor": {
+      "files": {
+        "distributed_processor.py": {
+          "imports": {
+            "standard_library": [
+              "typing",
+              "os",
+              "logging"
+            ],
+            "third_party": [
+              "whisper",
+              "sentence_transformers",
+              "torch",
+              "ray",
+              "moviepy.editor",
+              "numpy",
+              "concurrent.futures"
+            ],
+            "local": []
+          },
+          "classes": [
+            {
+              "name": "DistributedEmbeddingWorker",
+              "bases": [],
+              "methods": [
+                {
+                  "name": "__init__",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "model_name",
+                      "annotation": "str"
+                    }
+                  ],
+                  "returns": null,
+                  "complexity": 3
+                },
+                {
+                  "name": "generate_embeddings",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "texts",
+                      "annotation": "<ast.Subscript object at 0x1067d2310>"
+                    }
+                  ],
+                  "returns": "np.ndarray",
+                  "complexity": 1
+                }
+              ],
+              "attributes": [],
+              "complexity": 3
+            },
+            {
+              "name": "DistributedTranscriptionWorker",
+              "bases": [],
+              "methods": [
+                {
+                  "name": "__init__",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "model_size",
+                      "annotation": "str"
+                    }
+                  ],
+                  "returns": null,
+                  "complexity": 1
+                },
+                {
+                  "name": "transcribe_segment",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "video_path",
+                      "annotation": "str"
+                    },
+                    {
+                      "name": "start_time",
+                      "annotation": "float"
+                    },
+                    {
+                      "name": "end_time",
+                      "annotation": "float"
+                    }
+                  ],
+                  "returns": "Dict",
+                  "complexity": 3
+                }
+              ],
+              "attributes": [],
+              "complexity": 3
+            },
+            {
+              "name": "DistributedProcessor",
+              "bases": [],
+              "methods": [
+                {
+                  "name": "__init__",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "num_workers",
+                      "annotation": "<ast.Subscript object at 0x1067ccbd0>"
+                    }
+                  ],
+                  "returns": null,
+                  "complexity": 3
+                },
+                {
+                  "name": "generate_embeddings_batch",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "texts",
+                      "annotation": "<ast.Subscript object at 0x1067ca510>"
+                    }
+                  ],
+                  "returns": "np.ndarray",
+                  "complexity": 1
+                },
+                {
+                  "name": "transcribe_video_segments",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "video_path",
+                      "annotation": "str"
+                    },
+                    {
+                      "name": "segments",
+                      "annotation": "<ast.Subscript object at 0x1067d8590>"
+                    }
+                  ],
+                  "returns": "<ast.Subscript object at 0x1067db550>",
+                  "complexity": 2
+                },
+                {
+                  "name": "cleanup",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    }
+                  ],
+                  "returns": null,
+                  "complexity": 1
+                }
+              ],
+              "attributes": [],
+              "complexity": 4
+            }
+          ],
+          "functions": [
+            {
+              "name": "__init__",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "model_name",
+                  "annotation": "str"
+                }
+              ],
+              "returns": null,
+              "complexity": 3
+            },
+            {
+              "name": "generate_embeddings",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "texts",
+                  "annotation": "<ast.Subscript object at 0x1067d2310>"
+                }
+              ],
+              "returns": "np.ndarray",
+              "complexity": 1
+            },
+            {
+              "name": "__init__",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "model_size",
+                  "annotation": "str"
+                }
+              ],
+              "returns": null,
+              "complexity": 1
+            },
+            {
+              "name": "transcribe_segment",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "video_path",
+                  "annotation": "str"
+                },
+                {
+                  "name": "start_time",
+                  "annotation": "float"
+                },
+                {
+                  "name": "end_time",
+                  "annotation": "float"
+                }
+              ],
+              "returns": "Dict",
+              "complexity": 3
+            },
+            {
+              "name": "__init__",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "num_workers",
+                  "annotation": "<ast.Subscript object at 0x1067ccbd0>"
+                }
+              ],
+              "returns": null,
+              "complexity": 3
+            },
+            {
+              "name": "generate_embeddings_batch",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "texts",
+                  "annotation": "<ast.Subscript object at 0x1067ca510>"
+                }
+              ],
+              "returns": "np.ndarray",
+              "complexity": 1
+            },
+            {
+              "name": "transcribe_video_segments",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "video_path",
+                  "annotation": "str"
+                },
+                {
+                  "name": "segments",
+                  "annotation": "<ast.Subscript object at 0x1067d8590>"
+                }
+              ],
+              "returns": "<ast.Subscript object at 0x1067db550>",
+              "complexity": 2
+            },
+            {
+              "name": "cleanup",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                }
+              ],
+              "returns": null,
+              "complexity": 1
+            }
+          ],
+          "complexity": {
+            "cyclomatic": 8,
+            "cognitive": 22,
+            "halstead": {
+              "vocabulary": 75,
+              "length": 602,
+              "difficulty": 2.0,
+              "effort": 150.0
+            }
+          }
+        }
+      },
+      "dependencies": [
+        "whisper",
+        "sentence_transformers",
+        "os",
+        "torch",
+        "ray",
+        "moviepy.editor",
+        "typing",
+        "logging",
+        "numpy",
+        "concurrent.futures"
+      ],
+      "complexity": {
+        "cyclomatic": 8,
+        "cognitive": 22,
+        "halstead": {
+          "vocabulary": 75,
+          "length": 602,
+          "difficulty": 2.0,
+          "effort": 150.0
+        }
+      },
+      "migration_notes": [
+        "High cognitive complexity - consider simplifying control flow",
+        "Consider using tch-rs for PyTorch operations",
+        "Consider using rayon for parallel processing",
+        "Consider using ndarray for numpy operations",
+        "Contains Python magic methods - need to implement Rust traits",
+        "Contains Python magic methods - need to implement Rust traits",
+        "Contains Python magic methods - need to implement Rust traits"
+      ]
+    },
+    "core.vector_store": {
+      "files": {
+        "vector_store.py": {
+          "imports": {
+            "standard_library": [
+              "pickle",
+              "typing",
+              "logging"
+            ],
+            "third_party": [
+              "ray",
+              "torch",
+              "numpy",
+              "faiss",
+              "concurrent.futures"
+            ],
+            "local": []
+          },
+          "classes": [
+            {
+              "name": "VectorStoreWorker",
+              "bases": [],
+              "methods": [
+                {
+                  "name": "__init__",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "dimension",
+                      "annotation": "int"
+                    }
+                  ],
+                  "returns": null,
+                  "complexity": 1
+                },
+                {
+                  "name": "add_vectors",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "vectors",
+                      "annotation": "np.ndarray"
+                    },
+                    {
+                      "name": "documents",
+                      "annotation": "<ast.Subscript object at 0x102409250>"
+                    },
+                    {
+                      "name": "metadata",
+                      "annotation": "<ast.Subscript object at 0x10240a5d0>"
+                    },
+                    {
+                      "name": "video_chunks",
+                      "annotation": "<ast.Subscript object at 0x10240a750>"
+                    }
+                  ],
+                  "returns": "int",
+                  "complexity": 3
+                },
+                {
+                  "name": "search",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "query_embedding",
+                      "annotation": "np.ndarray"
+                    },
+                    {
+                      "name": "k",
+                      "annotation": "int"
+                    },
+                    {
+                      "name": "filter_metadata",
+                      "annotation": "<ast.Subscript object at 0x1023ec0d0>"
+                    }
+                  ],
+                  "returns": "<ast.Subscript object at 0x1023e3b90>",
+                  "complexity": 5
+                }
+              ],
+              "attributes": [],
+              "complexity": 7
+            },
+            {
+              "name": "VectorStore",
+              "bases": [],
+              "methods": [
+                {
+                  "name": "__init__",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "dimension",
+                      "annotation": "int"
+                    },
+                    {
+                      "name": "initial_capacity",
+                      "annotation": "int"
+                    },
+                    {
+                      "name": "num_workers",
+                      "annotation": "<ast.Subscript object at 0x1023e2310>"
+                    }
+                  ],
+                  "returns": null,
+                  "complexity": 3
+                },
+                {
+                  "name": "add_document",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "document",
+                      "annotation": "str"
+                    },
+                    {
+                      "name": "embedding",
+                      "annotation": "np.ndarray"
+                    },
+                    {
+                      "name": "metadata",
+                      "annotation": "<ast.Subscript object at 0x1023dff10>"
+                    },
+                    {
+                      "name": "video_chunk",
+                      "annotation": "<ast.Subscript object at 0x1023dfb90>"
+                    }
+                  ],
+                  "returns": "int",
+                  "complexity": 4
+                },
+                {
+                  "name": "add_documents_batch",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "documents",
+                      "annotation": "<ast.Subscript object at 0x1023e5910>"
+                    },
+                    {
+                      "name": "embeddings",
+                      "annotation": "np.ndarray"
+                    },
+                    {
+                      "name": "metadata",
+                      "annotation": "<ast.Subscript object at 0x1023e6a50>"
+                    },
+                    {
+                      "name": "video_chunks",
+                      "annotation": "<ast.Subscript object at 0x1023e66d0>"
+                    }
+                  ],
+                  "returns": "<ast.Subscript object at 0x10242e750>",
+                  "complexity": 8
+                },
+                {
+                  "name": "search",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "query_embedding",
+                      "annotation": "np.ndarray"
+                    },
+                    {
+                      "name": "k",
+                      "annotation": "int"
+                    },
+                    {
+                      "name": "filter_metadata",
+                      "annotation": "<ast.Subscript object at 0x10242ee10>"
+                    }
+                  ],
+                  "returns": "<ast.Subscript object at 0x102439890>",
+                  "complexity": 3
+                },
+                {
+                  "name": "_search_local",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "query_embedding",
+                      "annotation": "np.ndarray"
+                    },
+                    {
+                      "name": "k",
+                      "annotation": "int"
+                    },
+                    {
+                      "name": "filter_metadata",
+                      "annotation": "<ast.Subscript object at 0x102439f50>"
+                    }
+                  ],
+                  "returns": "<ast.Subscript object at 0x102442e90>",
+                  "complexity": 6
+                },
+                {
+                  "name": "save",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "path",
+                      "annotation": "str"
+                    }
+                  ],
+                  "returns": "bool",
+                  "complexity": 3
+                },
+                {
+                  "name": "load",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "path",
+                      "annotation": "str"
+                    }
+                  ],
+                  "returns": "bool",
+                  "complexity": 3
+                }
+              ],
+              "attributes": [],
+              "complexity": 24
+            }
+          ],
+          "functions": [
+            {
+              "name": "__init__",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "dimension",
+                  "annotation": "int"
+                }
+              ],
+              "returns": null,
+              "complexity": 1
+            },
+            {
+              "name": "add_vectors",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "vectors",
+                  "annotation": "np.ndarray"
+                },
+                {
+                  "name": "documents",
+                  "annotation": "<ast.Subscript object at 0x102409250>"
+                },
+                {
+                  "name": "metadata",
+                  "annotation": "<ast.Subscript object at 0x10240a5d0>"
+                },
+                {
+                  "name": "video_chunks",
+                  "annotation": "<ast.Subscript object at 0x10240a750>"
+                }
+              ],
+              "returns": "int",
+              "complexity": 3
+            },
+            {
+              "name": "search",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "query_embedding",
+                  "annotation": "np.ndarray"
+                },
+                {
+                  "name": "k",
+                  "annotation": "int"
+                },
+                {
+                  "name": "filter_metadata",
+                  "annotation": "<ast.Subscript object at 0x1023ec0d0>"
+                }
+              ],
+              "returns": "<ast.Subscript object at 0x1023e3b90>",
+              "complexity": 5
+            },
+            {
+              "name": "__init__",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "dimension",
+                  "annotation": "int"
+                },
+                {
+                  "name": "initial_capacity",
+                  "annotation": "int"
+                },
+                {
+                  "name": "num_workers",
+                  "annotation": "<ast.Subscript object at 0x1023e2310>"
+                }
+              ],
+              "returns": null,
+              "complexity": 3
+            },
+            {
+              "name": "add_document",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "document",
+                  "annotation": "str"
+                },
+                {
+                  "name": "embedding",
+                  "annotation": "np.ndarray"
+                },
+                {
+                  "name": "metadata",
+                  "annotation": "<ast.Subscript object at 0x1023dff10>"
+                },
+                {
+                  "name": "video_chunk",
+                  "annotation": "<ast.Subscript object at 0x1023dfb90>"
+                }
+              ],
+              "returns": "int",
+              "complexity": 4
+            },
+            {
+              "name": "add_documents_batch",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "documents",
+                  "annotation": "<ast.Subscript object at 0x1023e5910>"
+                },
+                {
+                  "name": "embeddings",
+                  "annotation": "np.ndarray"
+                },
+                {
+                  "name": "metadata",
+                  "annotation": "<ast.Subscript object at 0x1023e6a50>"
+                },
+                {
+                  "name": "video_chunks",
+                  "annotation": "<ast.Subscript object at 0x1023e66d0>"
+                }
+              ],
+              "returns": "<ast.Subscript object at 0x10242e750>",
+              "complexity": 8
+            },
+            {
+              "name": "search",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "query_embedding",
+                  "annotation": "np.ndarray"
+                },
+                {
+                  "name": "k",
+                  "annotation": "int"
+                },
+                {
+                  "name": "filter_metadata",
+                  "annotation": "<ast.Subscript object at 0x10242ee10>"
+                }
+              ],
+              "returns": "<ast.Subscript object at 0x102439890>",
+              "complexity": 3
+            },
+            {
+              "name": "_search_local",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "query_embedding",
+                  "annotation": "np.ndarray"
+                },
+                {
+                  "name": "k",
+                  "annotation": "int"
+                },
+                {
+                  "name": "filter_metadata",
+                  "annotation": "<ast.Subscript object at 0x102439f50>"
+                }
+              ],
+              "returns": "<ast.Subscript object at 0x102442e90>",
+              "complexity": 6
+            },
+            {
+              "name": "save",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "path",
+                  "annotation": "str"
+                }
+              ],
+              "returns": "bool",
+              "complexity": 3
+            },
+            {
+              "name": "load",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "path",
+                  "annotation": "str"
+                }
+              ],
+              "returns": "bool",
+              "complexity": 3
+            }
+          ],
+          "complexity": {
+            "cyclomatic": 30,
+            "cognitive": 277,
+            "halstead": {
+              "vocabulary": 110,
+              "length": 1598,
+              "difficulty": 5.5,
+              "effort": 605.0
+            }
+          }
+        }
+      },
+      "dependencies": [
+        "torch",
+        "pickle",
+        "typing",
+        "numpy",
+        "ray",
+        "faiss",
+        "logging",
+        "concurrent.futures"
+      ],
+      "complexity": {
+        "cyclomatic": 30,
+        "cognitive": 277,
+        "halstead": {
+          "vocabulary": 110,
+          "length": 1598,
+          "difficulty": 5.5,
+          "effort": 605.0
+        }
+      },
+      "migration_notes": [
+        "High cyclomatic complexity - consider breaking down into smaller functions",
+        "High cognitive complexity - consider simplifying control flow",
+        "Consider using tch-rs for PyTorch operations",
+        "Consider using ndarray for numpy operations",
+        "Consider using rayon for parallel processing",
+        "Contains Python magic methods - need to implement Rust traits",
+        "Contains Python magic methods - need to implement Rust traits"
+      ]
+    },
+    "core.debug_engine": {
+      "files": {
+        "debug_engine.py": {
+          "imports": {
+            "standard_library": [
+              "time",
+              "dataclasses",
+              "typing",
+              "subprocess",
+              "json",
+              "pathlib",
+              "argparse",
+              "logging"
+            ],
+            "third_party": [
+              "ragtime_llm.utils.resource_manager",
+              "ragtime_llm.utils.auto_fix_manager",
+              "ragtime_llm.utils.error_handler",
+              "rich.progress",
+              "rich.console",
+              "git",
+              "concurrent.futures"
+            ],
+            "local": []
+          },
+          "classes": [
+            {
+              "name": "TestResult",
+              "bases": [],
+              "methods": [],
+              "attributes": [],
+              "complexity": 1
+            },
+            {
+              "name": "IterationMetrics",
+              "bases": [],
+              "methods": [],
+              "attributes": [],
+              "complexity": 1
+            },
+            {
+              "name": "TestIterator",
+              "bases": [],
+              "methods": [
+                {
+                  "name": "__init__",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "test_path",
+                      "annotation": "str"
+                    },
+                    {
+                      "name": "max_iterations",
+                      "annotation": "int"
+                    },
+                    {
+                      "name": "max_workers",
+                      "annotation": "int"
+                    }
+                  ],
+                  "returns": null,
+                  "complexity": 1
+                },
+                {
+                  "name": "run_test",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "test_name",
+                      "annotation": "str"
+                    }
+                  ],
+                  "returns": "TestResult",
+                  "complexity": 3
+                },
+                {
+                  "name": "iterate_tests",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    }
+                  ],
+                  "returns": "<ast.Subscript object at 0x10243bd50>",
+                  "complexity": 5
+                }
+              ],
+              "attributes": [],
+              "complexity": 7
+            },
+            {
+              "name": "MergeManager",
+              "bases": [],
+              "methods": [
+                {
+                  "name": "__init__",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "repo_path",
+                      "annotation": "<ast.Subscript object at 0x10243b210>"
+                    }
+                  ],
+                  "returns": null,
+                  "complexity": 1
+                },
+                {
+                  "name": "create_fix_branch",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "fix_id",
+                      "annotation": "str"
+                    }
+                  ],
+                  "returns": "str",
+                  "complexity": 1
+                },
+                {
+                  "name": "apply_fix",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "fix_action",
+                      "annotation": "<ast.Subscript object at 0x102438690>"
+                    },
+                    {
+                      "name": "branch_name",
+                      "annotation": "str"
+                    }
+                  ],
+                  "returns": "bool",
+                  "complexity": 5
+                },
+                {
+                  "name": "merge_fix",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "branch_name",
+                      "annotation": "str"
+                    }
+                  ],
+                  "returns": "bool",
+                  "complexity": 3
+                }
+              ],
+              "attributes": [],
+              "complexity": 7
+            },
+            {
+              "name": "DebugEngine",
+              "bases": [],
+              "methods": [
+                {
+                  "name": "__init__",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "test_path",
+                      "annotation": "str"
+                    },
+                    {
+                      "name": "repo_path",
+                      "annotation": "<ast.Subscript object at 0x1023de3d0>"
+                    },
+                    {
+                      "name": "max_iterations",
+                      "annotation": "int"
+                    }
+                  ],
+                  "returns": null,
+                  "complexity": 1
+                },
+                {
+                  "name": "run_debug_cycle",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    }
+                  ],
+                  "returns": "<ast.Subscript object at 0x10240aed0>",
+                  "complexity": 8
+                }
+              ],
+              "attributes": [],
+              "complexity": 8
+            }
+          ],
+          "functions": [
+            {
+              "name": "main",
+              "args": [],
+              "returns": null,
+              "complexity": 1
+            },
+            {
+              "name": "__init__",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "test_path",
+                  "annotation": "str"
+                },
+                {
+                  "name": "max_iterations",
+                  "annotation": "int"
+                },
+                {
+                  "name": "max_workers",
+                  "annotation": "int"
+                }
+              ],
+              "returns": null,
+              "complexity": 1
+            },
+            {
+              "name": "run_test",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "test_name",
+                  "annotation": "str"
+                }
+              ],
+              "returns": "TestResult",
+              "complexity": 3
+            },
+            {
+              "name": "iterate_tests",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                }
+              ],
+              "returns": "<ast.Subscript object at 0x10243bd50>",
+              "complexity": 5
+            },
+            {
+              "name": "__init__",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "repo_path",
+                  "annotation": "<ast.Subscript object at 0x10243b210>"
+                }
+              ],
+              "returns": null,
+              "complexity": 1
+            },
+            {
+              "name": "create_fix_branch",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "fix_id",
+                  "annotation": "str"
+                }
+              ],
+              "returns": "str",
+              "complexity": 1
+            },
+            {
+              "name": "apply_fix",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "fix_action",
+                  "annotation": "<ast.Subscript object at 0x102438690>"
+                },
+                {
+                  "name": "branch_name",
+                  "annotation": "str"
+                }
+              ],
+              "returns": "bool",
+              "complexity": 5
+            },
+            {
+              "name": "merge_fix",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "branch_name",
+                  "annotation": "str"
+                }
+              ],
+              "returns": "bool",
+              "complexity": 3
+            },
+            {
+              "name": "__init__",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "test_path",
+                  "annotation": "str"
+                },
+                {
+                  "name": "repo_path",
+                  "annotation": "<ast.Subscript object at 0x1023de3d0>"
+                },
+                {
+                  "name": "max_iterations",
+                  "annotation": "int"
+                }
+              ],
+              "returns": null,
+              "complexity": 1
+            },
+            {
+              "name": "run_debug_cycle",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                }
+              ],
+              "returns": "<ast.Subscript object at 0x10240aed0>",
+              "complexity": 8
+            }
+          ],
+          "complexity": {
+            "cyclomatic": 21,
+            "cognitive": 166,
+            "halstead": {
+              "vocabulary": 148,
+              "length": 1291,
+              "difficulty": 4.0,
+              "effort": 592.0
+            }
+          }
+        }
+      },
+      "dependencies": [
+        "ragtime_llm.utils.resource_manager",
+        "ragtime_llm.utils.auto_fix_manager",
+        "pathlib",
+        "time",
+        "rich.progress",
+        "typing",
+        "subprocess",
+        "rich.console",
+        "git",
+        "json",
+        "ragtime_llm.utils.error_handler",
+        "dataclasses",
+        "argparse",
+        "logging",
+        "concurrent.futures"
+      ],
+      "complexity": {
+        "cyclomatic": 21,
+        "cognitive": 166,
+        "halstead": {
+          "vocabulary": 148,
+          "length": 1291,
+          "difficulty": 4.0,
+          "effort": 592.0
+        }
+      },
+      "migration_notes": [
+        "High cyclomatic complexity - consider breaking down into smaller functions",
+        "High cognitive complexity - consider simplifying control flow",
+        "Contains Python magic methods - need to implement Rust traits",
+        "Contains Python magic methods - need to implement Rust traits",
+        "Contains Python magic methods - need to implement Rust traits"
+      ]
+    },
+    "utils.resource_manager": {
+      "files": {
+        "resource_manager.py": {
+          "imports": {
+            "standard_library": [
+              "threading",
+              "shutil",
+              "time",
+              "dataclasses",
+              "typing",
+              "os",
+              "json",
+              "pathlib",
+              "logging",
+              "datetime"
+            ],
+            "third_party": [
+              "psutil",
+              "torch"
+            ],
+            "local": []
+          },
+          "classes": [
+            {
+              "name": "ResourceMetrics",
+              "bases": [],
+              "methods": [],
+              "attributes": [],
+              "complexity": 1
+            },
+            {
+              "name": "ResourceManager",
+              "bases": [],
+              "methods": [
+                {
+                  "name": "__init__",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "base_dir",
+                      "annotation": "str"
+                    },
+                    {
+                      "name": "max_disk_usage",
+                      "annotation": "float"
+                    },
+                    {
+                      "name": "check_interval",
+                      "annotation": "int"
+                    },
+                    {
+                      "name": "metrics_history",
+                      "annotation": "int"
+                    }
+                  ],
+                  "returns": null,
+                  "complexity": 1
+                },
+                {
+                  "name": "_start_monitoring",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    }
+                  ],
+                  "returns": null,
+                  "complexity": 2
+                },
+                {
+                  "name": "_monitor_resources",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    }
+                  ],
+                  "returns": null,
+                  "complexity": 6
+                },
+                {
+                  "name": "_collect_metrics",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    }
+                  ],
+                  "returns": "ResourceMetrics",
+                  "complexity": 6
+                },
+                {
+                  "name": "_check_resource_warnings",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "metrics",
+                      "annotation": "ResourceMetrics"
+                    }
+                  ],
+                  "returns": null,
+                  "complexity": 5
+                },
+                {
+                  "name": "_save_metrics",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    }
+                  ],
+                  "returns": null,
+                  "complexity": 3
+                },
+                {
+                  "name": "get_resource_usage",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    }
+                  ],
+                  "returns": "<ast.Subscript object at 0x1023dda10>",
+                  "complexity": 1
+                },
+                {
+                  "name": "get_metrics_history",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "start_time",
+                      "annotation": "<ast.Subscript object at 0x1023ddb10>"
+                    },
+                    {
+                      "name": "end_time",
+                      "annotation": "<ast.Subscript object at 0x1023dee10>"
+                    }
+                  ],
+                  "returns": "<ast.Subscript object at 0x1023dfe10>",
+                  "complexity": 3
+                },
+                {
+                  "name": "cleanup",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "min_free_space",
+                      "annotation": "float"
+                    }
+                  ],
+                  "returns": "bool",
+                  "complexity": 6
+                },
+                {
+                  "name": "stop_monitoring",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    }
+                  ],
+                  "returns": null,
+                  "complexity": 2
+                }
+              ],
+              "attributes": [],
+              "complexity": 26
+            }
+          ],
+          "functions": [
+            {
+              "name": "__init__",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "base_dir",
+                  "annotation": "str"
+                },
+                {
+                  "name": "max_disk_usage",
+                  "annotation": "float"
+                },
+                {
+                  "name": "check_interval",
+                  "annotation": "int"
+                },
+                {
+                  "name": "metrics_history",
+                  "annotation": "int"
+                }
+              ],
+              "returns": null,
+              "complexity": 1
+            },
+            {
+              "name": "_start_monitoring",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                }
+              ],
+              "returns": null,
+              "complexity": 2
+            },
+            {
+              "name": "_monitor_resources",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                }
+              ],
+              "returns": null,
+              "complexity": 6
+            },
+            {
+              "name": "_collect_metrics",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                }
+              ],
+              "returns": "ResourceMetrics",
+              "complexity": 6
+            },
+            {
+              "name": "_check_resource_warnings",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "metrics",
+                  "annotation": "ResourceMetrics"
+                }
+              ],
+              "returns": null,
+              "complexity": 5
+            },
+            {
+              "name": "_save_metrics",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                }
+              ],
+              "returns": null,
+              "complexity": 3
+            },
+            {
+              "name": "get_resource_usage",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                }
+              ],
+              "returns": "<ast.Subscript object at 0x1023dda10>",
+              "complexity": 1
+            },
+            {
+              "name": "get_metrics_history",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "start_time",
+                  "annotation": "<ast.Subscript object at 0x1023ddb10>"
+                },
+                {
+                  "name": "end_time",
+                  "annotation": "<ast.Subscript object at 0x1023dee10>"
+                }
+              ],
+              "returns": "<ast.Subscript object at 0x1023dfe10>",
+              "complexity": 3
+            },
+            {
+              "name": "cleanup",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "min_free_space",
+                  "annotation": "float"
+                }
+              ],
+              "returns": "bool",
+              "complexity": 6
+            },
+            {
+              "name": "stop_monitoring",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                }
+              ],
+              "returns": null,
+              "complexity": 2
+            }
+          ],
+          "complexity": {
+            "cyclomatic": 26,
+            "cognitive": 254,
+            "halstead": {
+              "vocabulary": 92,
+              "length": 942,
+              "difficulty": 4.5,
+              "effort": 414.0
+            }
+          }
+        }
+      },
+      "dependencies": [
+        "threading",
+        "pathlib",
+        "psutil",
+        "shutil",
+        "time",
+        "torch",
+        "typing",
+        "os",
+        "json",
+        "dataclasses",
+        "logging",
+        "datetime"
+      ],
+      "complexity": {
+        "cyclomatic": 26,
+        "cognitive": 254,
+        "halstead": {
+          "vocabulary": 92,
+          "length": 942,
+          "difficulty": 4.5,
+          "effort": 414.0
+        }
+      },
+      "migration_notes": [
+        "High cyclomatic complexity - consider breaking down into smaller functions",
+        "High cognitive complexity - consider simplifying control flow",
+        "Consider using tch-rs for PyTorch operations",
+        "Contains Python magic methods - need to implement Rust traits"
+      ]
+    },
+    "utils.storage_manager": {
+      "files": {
+        "storage_manager.py": {
+          "imports": {
+            "standard_library": [
+              "pathlib",
+              "typing",
+              "os",
+              "logging"
+            ],
+            "third_party": [
+              "ipfshttpclient",
+              "ragtime_llm.utils.logger",
+              "ragtime_llm.utils.storage_partitioning",
+              "ragtime_llm.utils.content_indexer"
+            ],
+            "local": []
+          },
+          "classes": [
+            {
+              "name": "StorageManager",
+              "bases": [],
+              "methods": [
+                {
+                  "name": "__init__",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "cache_dir",
+                      "annotation": "str"
+                    },
+                    {
+                      "name": "ipfs_api",
+                      "annotation": "str"
+                    },
+                    {
+                      "name": "local_volumes",
+                      "annotation": "<ast.Subscript object at 0x10242f690>"
+                    },
+                    {
+                      "name": "ipfs_pin_threshold",
+                      "annotation": "int"
+                    },
+                    {
+                      "name": "local_volume_threshold",
+                      "annotation": "int"
+                    },
+                    {
+                      "name": "replication_factor",
+                      "annotation": "int"
+                    },
+                    {
+                      "name": "index_dir",
+                      "annotation": "str"
+                    }
+                  ],
+                  "returns": null,
+                  "complexity": 1
+                },
+                {
+                  "name": "store_file",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "file_path",
+                      "annotation": "<ast.Subscript object at 0x10242cd10>"
+                    },
+                    {
+                      "name": "content_type",
+                      "annotation": "str"
+                    },
+                    {
+                      "name": "metadata",
+                      "annotation": "<ast.Subscript object at 0x10242d110>"
+                    }
+                  ],
+                  "returns": "<ast.Subscript object at 0x102419550>",
+                  "complexity": 3
+                },
+                {
+                  "name": "store_bytes",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "content",
+                      "annotation": "bytes"
+                    },
+                    {
+                      "name": "content_type",
+                      "annotation": "str"
+                    },
+                    {
+                      "name": "metadata",
+                      "annotation": "<ast.Subscript object at 0x102418450>"
+                    }
+                  ],
+                  "returns": "<ast.Subscript object at 0x10241bcd0>",
+                  "complexity": 3
+                },
+                {
+                  "name": "retrieve_file",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "content_hash",
+                      "annotation": "str"
+                    },
+                    {
+                      "name": "output_path",
+                      "annotation": "<ast.Subscript object at 0x10241b190>"
+                    }
+                  ],
+                  "returns": "<ast.Subscript object at 0x102443950>",
+                  "complexity": 5
+                },
+                {
+                  "name": "get_metadata",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "content_hash",
+                      "annotation": "str"
+                    }
+                  ],
+                  "returns": "<ast.Subscript object at 0x102441610>",
+                  "complexity": 5
+                },
+                {
+                  "name": "get_by_type",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "content_type",
+                      "annotation": "str"
+                    }
+                  ],
+                  "returns": "<ast.Subscript object at 0x1023e1f10>",
+                  "complexity": 1
+                },
+                {
+                  "name": "get_by_tag",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "tag",
+                      "annotation": "str"
+                    }
+                  ],
+                  "returns": "<ast.Subscript object at 0x1023e3c50>",
+                  "complexity": 1
+                },
+                {
+                  "name": "get_references",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "content_hash",
+                      "annotation": "str"
+                    }
+                  ],
+                  "returns": "<ast.Subscript object at 0x1023e3290>",
+                  "complexity": 1
+                },
+                {
+                  "name": "get_referenced_by",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "content_hash",
+                      "annotation": "str"
+                    }
+                  ],
+                  "returns": "<ast.Subscript object at 0x1023e1290>",
+                  "complexity": 1
+                },
+                {
+                  "name": "update_metadata",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "content_hash",
+                      "annotation": "str"
+                    },
+                    {
+                      "name": "metadata",
+                      "annotation": "Dict"
+                    }
+                  ],
+                  "returns": "<ast.Subscript object at 0x1023e1850>",
+                  "complexity": 1
+                },
+                {
+                  "name": "delete_content",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "content_hash",
+                      "annotation": "str"
+                    }
+                  ],
+                  "returns": "bool",
+                  "complexity": 3
+                },
+                {
+                  "name": "cleanup",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    },
+                    {
+                      "name": "max_cache_size",
+                      "annotation": "<ast.Subscript object at 0x1023dfa90>"
+                    }
+                  ],
+                  "returns": null,
+                  "complexity": 3
+                },
+                {
+                  "name": "get_storage_stats",
+                  "args": [
+                    {
+                      "name": "self",
+                      "annotation": null
+                    }
+                  ],
+                  "returns": "Dict",
+                  "complexity": 3
+                }
+              ],
+              "attributes": [],
+              "complexity": 19
+            }
+          ],
+          "functions": [
+            {
+              "name": "__init__",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "cache_dir",
+                  "annotation": "str"
+                },
+                {
+                  "name": "ipfs_api",
+                  "annotation": "str"
+                },
+                {
+                  "name": "local_volumes",
+                  "annotation": "<ast.Subscript object at 0x10242f690>"
+                },
+                {
+                  "name": "ipfs_pin_threshold",
+                  "annotation": "int"
+                },
+                {
+                  "name": "local_volume_threshold",
+                  "annotation": "int"
+                },
+                {
+                  "name": "replication_factor",
+                  "annotation": "int"
+                },
+                {
+                  "name": "index_dir",
+                  "annotation": "str"
+                }
+              ],
+              "returns": null,
+              "complexity": 1
+            },
+            {
+              "name": "store_file",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "file_path",
+                  "annotation": "<ast.Subscript object at 0x10242cd10>"
+                },
+                {
+                  "name": "content_type",
+                  "annotation": "str"
+                },
+                {
+                  "name": "metadata",
+                  "annotation": "<ast.Subscript object at 0x10242d110>"
+                }
+              ],
+              "returns": "<ast.Subscript object at 0x102419550>",
+              "complexity": 3
+            },
+            {
+              "name": "store_bytes",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "content",
+                  "annotation": "bytes"
+                },
+                {
+                  "name": "content_type",
+                  "annotation": "str"
+                },
+                {
+                  "name": "metadata",
+                  "annotation": "<ast.Subscript object at 0x102418450>"
+                }
+              ],
+              "returns": "<ast.Subscript object at 0x10241bcd0>",
+              "complexity": 3
+            },
+            {
+              "name": "retrieve_file",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "content_hash",
+                  "annotation": "str"
+                },
+                {
+                  "name": "output_path",
+                  "annotation": "<ast.Subscript object at 0x10241b190>"
+                }
+              ],
+              "returns": "<ast.Subscript object at 0x102443950>",
+              "complexity": 5
+            },
+            {
+              "name": "get_metadata",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "content_hash",
+                  "annotation": "str"
+                }
+              ],
+              "returns": "<ast.Subscript object at 0x102441610>",
+              "complexity": 5
+            },
+            {
+              "name": "get_by_type",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "content_type",
+                  "annotation": "str"
+                }
+              ],
+              "returns": "<ast.Subscript object at 0x1023e1f10>",
+              "complexity": 1
+            },
+            {
+              "name": "get_by_tag",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "tag",
+                  "annotation": "str"
+                }
+              ],
+              "returns": "<ast.Subscript object at 0x1023e3c50>",
+              "complexity": 1
+            },
+            {
+              "name": "get_references",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "content_hash",
+                  "annotation": "str"
+                }
+              ],
+              "returns": "<ast.Subscript object at 0x1023e3290>",
+              "complexity": 1
+            },
+            {
+              "name": "get_referenced_by",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "content_hash",
+                  "annotation": "str"
+                }
+              ],
+              "returns": "<ast.Subscript object at 0x1023e1290>",
+              "complexity": 1
+            },
+            {
+              "name": "update_metadata",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "content_hash",
+                  "annotation": "str"
+                },
+                {
+                  "name": "metadata",
+                  "annotation": "Dict"
+                }
+              ],
+              "returns": "<ast.Subscript object at 0x1023e1850>",
+              "complexity": 1
+            },
+            {
+              "name": "delete_content",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "content_hash",
+                  "annotation": "str"
+                }
+              ],
+              "returns": "bool",
+              "complexity": 3
+            },
+            {
+              "name": "cleanup",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                },
+                {
+                  "name": "max_cache_size",
+                  "annotation": "<ast.Subscript object at 0x1023dfa90>"
+                }
+              ],
+              "returns": null,
+              "complexity": 3
+            },
+            {
+              "name": "get_storage_stats",
+              "args": [
+                {
+                  "name": "self",
+                  "annotation": null
+                }
+              ],
+              "returns": "Dict",
+              "complexity": 3
+            }
+          ],
+          "complexity": {
+            "cyclomatic": 19,
+            "cognitive": 126,
+            "halstead": {
+              "vocabulary": 84,
+              "length": 867,
+              "difficulty": 1.0,
+              "effort": 84.0
+            }
+          }
+        }
+      },
+      "dependencies": [
+        "ipfshttpclient",
+        "typing",
+        "os",
+        "ragtime_llm.utils.logger",
+        "ragtime_llm.utils.storage_partitioning",
+        "ragtime_llm.utils.content_indexer",
+        "pathlib",
+        "logging"
+      ],
+      "complexity": {
+        "cyclomatic": 19,
+        "cognitive": 126,
+        "halstead": {
+          "vocabulary": 84,
+          "length": 867,
+          "difficulty": 1.0,
+          "effort": 84.0
+        }
+      },
+      "migration_notes": [
+        "High cyclomatic complexity - consider breaking down into smaller functions",
+        "High cognitive complexity - consider simplifying control flow",
+        "Contains Python magic methods - need to implement Rust traits"
+      ]
+    }
+  },
+  "dependencies": {},
+  "complexity": {},
+  "migration_notes": {}
+}

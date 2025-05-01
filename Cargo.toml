@@ -1,0 +1,71 @@
+[package]
+name = "ragtime_llm"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "A high-performance LLM toolkit with Rust acceleration"
+license = "MIT"
+
+[lib]
+name = "ragtime_llm"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# Core dependencies
+tokio = { version = "1.36", features = ["full"] }
+async-trait = "0.1"
+futures = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+anyhow = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# ML and data processing
+tch = "0.15"  # PyTorch bindings
+ndarray = "0.15"
+rayon = "1.8"
+faiss = "0.15"
+tokenizers = "0.15"
+
+# Async and concurrency
+rayon = "1.8"
+crossbeam = "0.8"
+parking_lot = "0.12"
+
+# Utilities
+chrono = "0.4"
+uuid = { version = "1.6", features = ["v4"] }
+regex = "1.10"
+walkdir = "2.4"
+glob = "0.3"
+
+# Python bindings
+pyo3 = { version = "0.20", features = ["extension-module"] }
+numpy = "0.20"
+
+[dev-dependencies]
+criterion = "0.5"
+mockall = "0.12"
+proptest = "1.4"
+tempfile = "3.10"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+[workspace]
+members = [
+    "ragtime_llm-core",
+    "ragtime_llm-utils",
+    "ragtime_llm-ml",
+    "ragtime_llm-python"
+] 
